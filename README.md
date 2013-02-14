@@ -1,4 +1,5 @@
-`cm-mode` provides (rudimentary) support for [CriticMarkup](http://criticmarkup.com/).
+`cm-mode` provides (rudimentary) support for
+[CriticMarkup](http://criticmarkup.com/) in Emacs.
 
 CriticMarkup defines the following patterns for marking changes to a text:
 
