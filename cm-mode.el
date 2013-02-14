@@ -75,7 +75,7 @@
 (defvar cm-deletion-regexp "\\(?:{--.*?--}\\)"
   "CriticMarkup deletion regexp.")
 
-(defvar cm-substitution-regexp "\\(?:{~~.*?->.*?~~}\\)"
+(defvar cm-substitution-regexp "\\(?:{~~.*?~>.*?~~}\\)"
   "CriticMarkup substitution regexp.")
 
 (defvar cm-comment-regexp "\\(?:{>>.*?<<}\\)"
@@ -168,7 +168,7 @@
   "Mark a substitution."
   (interactive "r")
   (let ((text (delete-and-extract-region beg end)))
-    (insert (concat "{~~" text "->~~}"))
+    (insert (concat "{~~" text "~>~~}"))
     (backward-char 3)))
 
 (defun cm-comment ()
