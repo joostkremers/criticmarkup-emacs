@@ -1,3 +1,5 @@
+# CriticMarkup for Emacs #
+
 `cm-mode` is a minor mode that provides (rudimentary) support for
 [CriticMarkup](http://criticmarkup.com/) in Emacs.
 
