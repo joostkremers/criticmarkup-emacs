@@ -344,6 +344,27 @@ If N is negative, move backward."
 (put 'cm-highlight 'beginning-op 'cm-beginning-highlight)
 (put 'cm-highlight 'end-op 'cm-end-highlight)
 
+(defun cm-bounds-of-markup-at-point (type)
+  "Return the bounds of markup TYPE at point.
+If point is not within a markup of TYPE, return NIL."
+  (if (symbolp type)
+      (setq type (symbol-name type)))
+  (if (thing-at-point (intern (concat "cm-" type)))
+      (let ((beg (save-excursion
+                   (funcall (intern (concat "cm-beginning-" type)))
+                   (point)))
+            (end (save-excursion
+                   (funcall (intern (concat "cm-end-" type)))
+                   (point))))
+        (cons beg end))))
+
+(defun cm-markup-at-point ()
+  "Return the type of markup at point, or NIL if point in not inside a markup."
+  (catch 'found
+    (dolist (type (mapcar #'car cm-delimiter-regexps) nil)
+      (when (thing-at-point (intern (concat "cm-" (symbol-name type))))
+        (throw 'found type)))))
+
 (provide 'cm-mode)
 
 ;;; cm-mode ends here
