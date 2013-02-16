@@ -79,6 +79,15 @@
 
 ;;; Code:
 
+(require 'thingatpt)
+
+(defvar cm-delimiter-regexps '((insertion "{\\+\\+" "\\+\\+}")
+                               (deletion "{--" "--}")
+                               (substitution "{~~" "~~}")
+                               (comment "{>>" "<<}")
+                               (highlight "{{" ".}}")) ; note the dot
+  "CriticMarkup Delimiters.")
+
 (defvar cm-insertion-regexp "\\(?:{\\+\\+.*?\\+\\+}\\)"
   "CriticMarkup insertion regexp.")
 
@@ -193,6 +202,148 @@
   (let ((text (delete-and-extract-region beg end)))
     (insert (concat "{{" text "}}{>><<}"))
     (backward-char 3)))
+
+(defun cm-forward-insertion (&optional n)
+  "Move forward N insertion markups.
+If N is negative, move backward."
+  (or n (setq n 1))
+  (cond
+   ((> n 0)
+    (when (looking-at "\\+}")
+      (backward-char))
+    (re-search-forward (third (assoc 'insertion cm-delimiter-regexps)) nil t n))
+   (t
+    (when (and (looking-back "{" (1- (point)))
+               (looking-at "\\+\\+"))
+      (forward-char 2))
+    (when (looking-back "{\\+" (- (point) 2))
+      (forward-char))
+    (re-search-backward (second (assoc 'insertion cm-delimiter-regexps)) nil t (abs n)))))
+
+(defun cm-beginning-insertion ()
+  "Move to the beginning of an insertion."
+  (cm-forward-insertion -1))
+
+(defun cm-end-insertion ()
+  "Move to the end of an insertion."
+  (cm-forward-insertion 1))
+
+(put 'cm-insertion 'forward-op 'cm-forward-insertion)
+(put 'cm-insertion 'beginning-op 'cm-beginning-insertion)
+(put 'cm-insertion 'end-op 'cm-end-insertion)
+
+(defun cm-forward-deletion (&optional n)
+  "Move forward N deletion markups.
+If N is negative, move backward."
+  (or n (setq n 1))
+  (cond
+   ((> n 0)
+    (when (looking-at "-}")
+      (backward-char))
+    (re-search-forward (third (assoc 'deletion cm-delimiter-regexps)) nil t n))
+   (t
+    (when (and (looking-back "{" (1- (point)))
+               (looking-at "--"))
+      (forward-char 2))
+    (when (looking-back "{-" (- (point) 2))
+      (forward-char))
+    (re-search-backward (second (assoc 'deletion cm-delimiter-regexps)) nil t (abs n)))))
+
+(defun cm-beginning-deletion ()
+  "Move to the beginning of an deletion."
+  (cm-forward-deletion -1))
+
+(defun cm-end-deletion ()
+  "Move to the end of an deletion."
+  (cm-forward-deletion 1))
+
+(put 'cm-deletion 'forward-op 'cm-forward-deletion)
+(put 'cm-deletion 'beginning-op 'cm-beginning-deletion)
+(put 'cm-deletion 'end-op 'cm-end-deletion)
+
+(defun cm-forward-substitution (&optional n)
+  "Move forward N substitution markups.
+If N is negative, move backward."
+  (or n (setq n 1))
+  (cond
+   ((> n 0)
+    (when (looking-at "~}")
+      (backward-char))
+    (re-search-forward (third (assoc 'substitution cm-delimiter-regexps)) nil t n))
+   (t
+    (when (and (looking-back "{" (1- (point)))
+               (looking-at "~~"))
+      (forward-char 2))
+    (when (looking-back "{~" (- (point) 2))
+      (forward-char))
+    (re-search-backward (second (assoc 'substitution cm-delimiter-regexps)) nil t (abs n)))))
+
+(defun cm-beginning-substitution ()
+  "Move to the beginning of an substitution."
+  (cm-forward-substitution -1))
+
+(defun cm-end-substitution ()
+  "Move to the end of an substitution."
+  (cm-forward-substitution 1))
+
+(put 'cm-substitution 'forward-op 'cm-forward-substitution)
+(put 'cm-substitution 'beginning-op 'cm-beginning-substitution)
+(put 'cm-substitution 'end-op 'cm-end-substitution)
+
+(defun cm-forward-comment (&optional n)
+  "Move forward N comment markups.
+If N is negative, move backward."
+  (or n (setq n 1))
+  (cond
+   ((> n 0)
+    (when (looking-at "<}")
+      (backward-char))
+    (re-search-forward (third (assoc 'comment cm-delimiter-regexps)) nil t n))
+   (t
+    (when (and (looking-back "{" (1- (point)))
+               (looking-at ">>"))
+      (forward-char 2))
+    (when (looking-back "{>" (- (point) 2))
+      (forward-char))
+    (re-search-backward (second (assoc 'comment cm-delimiter-regexps)) nil t (abs n)))))
+
+(defun cm-beginning-comment ()
+  "Move to the beginning of an comment."
+  (cm-forward-comment -1))
+
+(defun cm-end-comment ()
+  "Move to the end of an comment."
+  (cm-forward-comment 1))
+
+(put 'cm-comment 'forward-op 'cm-forward-comment)
+(put 'cm-comment 'beginning-op 'cm-beginning-comment)
+(put 'cm-comment 'end-op 'cm-end-comment)
+
+(defun cm-forward-highlight (&optional n)
+  "Move forward N highlight markups.
+If N is negative, move backward."
+  (or n (setq n 1))
+  (cond
+   ((> n 0)
+    (re-search-forward (third (assoc 'highlight cm-delimiter-regexps)) nil t n))
+   (t
+    (when (and (looking-back "{" (1- (point)))
+               (looking-at "{"))
+      (forward-char))
+    (re-search-backward (second (assoc 'highlight cm-delimiter-regexps)) nil t (abs n)))))
+
+(defun cm-beginning-highlight ()
+  "Move to the beginning of an highlight."
+  (cm-forward-highlight -1))
+
+(defun cm-end-highlight ()
+  "Move to the end of an highlight."
+  (cm-forward-highlight 1))
+
+(put 'cm-highlight 'forward-op 'cm-forward-highlight)
+(put 'cm-highlight 'beginning-op 'cm-beginning-highlight)
+(put 'cm-highlight 'end-op 'cm-end-highlight)
+
 
 (provide 'cm-mode)
 
