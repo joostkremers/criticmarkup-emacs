@@ -211,14 +211,14 @@ If N is negative, move backward."
    ((> n 0)
     (when (looking-at "\\+}")
       (backward-char))
-    (re-search-forward (third (assoc 'insertion cm-delimiter-regexps)) nil t n))
+    (re-search-forward "\\+\\+}" nil t n))
    (t
     (when (and (looking-back "{" (1- (point)))
                (looking-at "\\+\\+"))
       (forward-char 2))
     (when (looking-back "{\\+" (- (point) 2))
       (forward-char))
-    (re-search-backward (second (assoc 'insertion cm-delimiter-regexps)) nil t (abs n)))))
+    (re-search-backward "{\\+\\+" nil t (abs n)))))
 
 (defun cm-beginning-insertion ()
   "Move to the beginning of an insertion."
@@ -240,14 +240,14 @@ If N is negative, move backward."
    ((> n 0)
     (when (looking-at "-}")
       (backward-char))
-    (re-search-forward (third (assoc 'deletion cm-delimiter-regexps)) nil t n))
+    (re-search-forward "--}" nil t n))
    (t
     (when (and (looking-back "{" (1- (point)))
                (looking-at "--"))
       (forward-char 2))
     (when (looking-back "{-" (- (point) 2))
       (forward-char))
-    (re-search-backward (second (assoc 'deletion cm-delimiter-regexps)) nil t (abs n)))))
+    (re-search-backward "{--" nil t (abs n)))))
 
 (defun cm-beginning-deletion ()
   "Move to the beginning of an deletion."
@@ -269,14 +269,14 @@ If N is negative, move backward."
    ((> n 0)
     (when (looking-at "~}")
       (backward-char))
-    (re-search-forward (third (assoc 'substitution cm-delimiter-regexps)) nil t n))
+    (re-search-forward "~~}" nil t n))
    (t
     (when (and (looking-back "{" (1- (point)))
                (looking-at "~~"))
       (forward-char 2))
     (when (looking-back "{~" (- (point) 2))
       (forward-char))
-    (re-search-backward (second (assoc 'substitution cm-delimiter-regexps)) nil t (abs n)))))
+    (re-search-backward "{~~" nil t (abs n)))))
 
 (defun cm-beginning-substitution ()
   "Move to the beginning of an substitution."
@@ -298,14 +298,14 @@ If N is negative, move backward."
    ((> n 0)
     (when (looking-at "<}")
       (backward-char))
-    (re-search-forward (third (assoc 'comment cm-delimiter-regexps)) nil t n))
+    (re-search-forward "<<}" nil t n))
    (t
     (when (and (looking-back "{" (1- (point)))
                (looking-at ">>"))
       (forward-char 2))
     (when (looking-back "{>" (- (point) 2))
       (forward-char))
-    (re-search-backward (second (assoc 'comment cm-delimiter-regexps)) nil t (abs n)))))
+    (re-search-backward "{>>" nil t (abs n)))))
 
 (defun cm-beginning-comment ()
   "Move to the beginning of an comment."
@@ -325,12 +325,12 @@ If N is negative, move backward."
   (or n (setq n 1))
   (cond
    ((> n 0)
-    (re-search-forward (third (assoc 'highlight cm-delimiter-regexps)) nil t n))
+    (re-search-forward "}}" nil t n))
    (t
     (when (and (looking-back "{" (1- (point)))
                (looking-at "{"))
       (forward-char))
-    (re-search-backward (second (assoc 'highlight cm-delimiter-regexps)) nil t (abs n)))))
+    (re-search-backward "{{" nil t (abs n)))))
 
 (defun cm-beginning-highlight ()
   "Move to the beginning of an highlight."
@@ -343,7 +343,6 @@ If N is negative, move backward."
 (put 'cm-highlight 'forward-op 'cm-forward-highlight)
 (put 'cm-highlight 'beginning-op 'cm-beginning-highlight)
 (put 'cm-highlight 'end-op 'cm-end-highlight)
-
 
 (provide 'cm-mode)
 
