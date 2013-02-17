@@ -114,11 +114,11 @@
 
 (require 'thingatpt)
 
-(defvar cm-delimiter-regexps '((cm-addition "{\\+\\+" "\\+\\+}")
-                               (cm-deletion "{--" "--}")
-                               (cm-substitution "{~~" "~~}")
-                               (cm-comment "{>>" "<<}")
-                               (cm-highlight "{{" ".}}")) ; note the dot
+(defvar cm-delimiters '((cm-addition "{++" "++}")
+                        (cm-deletion "{--" "--}")
+                        (cm-substitution "{~~" "~~}")
+                        (cm-comment "{>>" "<<}")
+                        (cm-highlight "{{" "}}"))
   "CriticMarkup Delimiters.")
 
 (defvar cm-addition-regexp "\\(?:{\\+\\+.*?\\+\\+}\\)"
@@ -252,121 +252,100 @@
     (insert (concat "{{" text "}}{>><<}"))
     (backward-char 3)))
 
+(defun cm-forward-markup (type &optional n)
+  "Move forward N markups of TYPE.
+If N is negative, move backward."
+  (if (eq type 'cm-highlight) ; highlights have a delimiter of two characters
+      (cm-forward-highlight n) ; therefore they have their own forward function
+    (or n (setq n 1))
+    ;; note that the delimiters are all three characters long. we must
+    ;; therefore allow for the possibility that point is *within* a
+    ;; delimiter. in the exx below, point is indicated with `|'.
+    (cond
+     ((> n 0) ; moving forward
+      (let ((delim (third (assq type cm-delimiters))))
+        ;; if point is inside the delimiter `+|+}':
+        (when (looking-at (regexp-quote (substring delim -2)))
+          (backward-char))
+        (re-search-forward (regexp-quote delim) nil t n)))
+     (t ; moving backward
+      (let ((delim (second (assq type cm-delimiters))))
+        ;; if point is inside the delimiter `{|++':
+        (when (and (looking-back (regexp-quote (substring delim 0 1)) (1- (point)))
+                   (looking-at (regexp-quote (substring delim 1))))
+          (forward-char 2))
+        ;; if point is inside the delimiter `{+|+':
+        (when (looking-back (regexp-quote (substring delim 0 2)) (- (point) 2)) 
+          (forward-char))
+        (re-search-backward (regexp-quote delim) nil t (abs n)))))))
+
 (defun cm-forward-addition (&optional n)
   "Move forward N addition markups.
 If N is negative, move backward."
-  (or n (setq n 1))
-  (cond
-   ((> n 0)
-    (when (looking-at "\\+}")
-      (backward-char))
-    (re-search-forward "\\+\\+}" nil t n))
-   (t
-    (when (and (looking-back "{" (1- (point)))
-               (looking-at "\\+\\+"))
-      (forward-char 2))
-    (when (looking-back "{\\+" (- (point) 2))
-      (forward-char))
-    (re-search-backward "{\\+\\+" nil t (abs n)))))
+  (cm-forward-markup 'cm-addition n))
 
-(defun cm-beginning-addition ()
+(defun cm-beginning-of-addition ()
   "Move to the beginning of an addition."
-  (cm-forward-addition -1))
+  (cm-forward-markup 'cm-addition -1))
 
-(defun cm-end-addition ()
+(defun cm-end-of-addition ()
   "Move to the end of an addition."
-  (cm-forward-addition 1))
+  (cm-forward-markup 'cm-addition 1))
 
 (put 'cm-addition 'forward-op 'cm-forward-addition)
-(put 'cm-addition 'beginning-op 'cm-beginning-addition)
-(put 'cm-addition 'end-op 'cm-end-addition)
+(put 'cm-addition 'beginning-op 'cm-beginning-of-addition)
+(put 'cm-addition 'end-op 'cm-end-of-addition)
 
 (defun cm-forward-deletion (&optional n)
   "Move forward N deletion markups.
 If N is negative, move backward."
-  (or n (setq n 1))
-  (cond
-   ((> n 0)
-    (when (looking-at "-}")
-      (backward-char))
-    (re-search-forward "--}" nil t n))
-   (t
-    (when (and (looking-back "{" (1- (point)))
-               (looking-at "--"))
-      (forward-char 2))
-    (when (looking-back "{-" (- (point) 2))
-      (forward-char))
-    (re-search-backward "{--" nil t (abs n)))))
+  (cm-forward-markup 'cm-deletion n))
 
-(defun cm-beginning-deletion ()
+(defun cm-beginning-of-deletion ()
   "Move to the beginning of an deletion."
-  (cm-forward-deletion -1))
+  (cm-forward-markup 'cm-deletion -1))
 
-(defun cm-end-deletion ()
+(defun cm-end-of-deletion ()
   "Move to the end of an deletion."
-  (cm-forward-deletion 1))
+  (cm-forward-markup 'cm-deletion 1))
 
 (put 'cm-deletion 'forward-op 'cm-forward-deletion)
-(put 'cm-deletion 'beginning-op 'cm-beginning-deletion)
-(put 'cm-deletion 'end-op 'cm-end-deletion)
+(put 'cm-deletion 'beginning-op 'cm-beginning-of-deletion)
+(put 'cm-deletion 'end-op 'cm-end-of-deletion)
 
 (defun cm-forward-substitution (&optional n)
   "Move forward N substitution markups.
 If N is negative, move backward."
-  (or n (setq n 1))
-  (cond
-   ((> n 0)
-    (when (looking-at "~}")
-      (backward-char))
-    (re-search-forward "~~}" nil t n))
-   (t
-    (when (and (looking-back "{" (1- (point)))
-               (looking-at "~~"))
-      (forward-char 2))
-    (when (looking-back "{~" (- (point) 2))
-      (forward-char))
-    (re-search-backward "{~~" nil t (abs n)))))
+  (cm-forward-markup 'cm-substitution n))
 
-(defun cm-beginning-substitution ()
+(defun cm-beginning-of-substitution ()
   "Move to the beginning of an substitution."
-  (cm-forward-substitution -1))
+  (cm-forward-markup 'cm-substitution -1))
 
-(defun cm-end-substitution ()
+(defun cm-end-of-substitution ()
   "Move to the end of an substitution."
-  (cm-forward-substitution 1))
+  (cm-forward-markup 'cm-substitution 1))
 
 (put 'cm-substitution 'forward-op 'cm-forward-substitution)
-(put 'cm-substitution 'beginning-op 'cm-beginning-substitution)
-(put 'cm-substitution 'end-op 'cm-end-substitution)
+(put 'cm-substitution 'beginning-op 'cm-beginning-of-substitution)
+(put 'cm-substitution 'end-op 'cm-end-of-substitution)
 
 (defun cm-forward-comment (&optional n)
   "Move forward N comment markups.
 If N is negative, move backward."
-  (or n (setq n 1))
-  (cond
-   ((> n 0)
-    (when (looking-at "<}")
-      (backward-char))
-    (re-search-forward "<<}" nil t n))
-   (t
-    (when (and (looking-back "{" (1- (point)))
-               (looking-at ">>"))
-      (forward-char 2))
-    (when (looking-back "{>" (- (point) 2))
-      (forward-char))
-    (re-search-backward "{>>" nil t (abs n)))))
+  (cm-forward-markup 'cm-comment n))
 
-(defun cm-beginning-comment ()
+(defun cm-beginning-of-comment ()
   "Move to the beginning of an comment."
-  (cm-forward-comment -1))
+  (cm-forward-markup 'cm-comment -1))
 
-(defun cm-end-comment ()
+(defun cm-end-of-comment ()
   "Move to the end of an comment."
-  (cm-forward-comment 1))
+  (cm-forward-markup 'cm-comment 1))
 
 (put 'cm-comment 'forward-op 'cm-forward-comment)
-(put 'cm-comment 'beginning-op 'cm-beginning-comment)
-(put 'cm-comment 'end-op 'cm-end-comment)
+(put 'cm-comment 'beginning-op 'cm-beginning-of-comment)
+(put 'cm-comment 'end-op 'cm-end-of-comment)
 
 (defun cm-forward-highlight (&optional n)
   "Move forward N highlight markups.
@@ -381,17 +360,17 @@ If N is negative, move backward."
       (forward-char))
     (re-search-backward "{{" nil t (abs n)))))
 
-(defun cm-beginning-highlight ()
+(defun cm-beginning-of-highlight ()
   "Move to the beginning of an highlight."
   (cm-forward-highlight -1))
 
-(defun cm-end-highlight ()
+(defun cm-end-of-highlight ()
   "Move to the end of an highlight."
   (cm-forward-highlight 1))
 
 (put 'cm-highlight 'forward-op 'cm-forward-highlight)
-(put 'cm-highlight 'beginning-op 'cm-beginning-highlight)
-(put 'cm-highlight 'end-op 'cm-end-highlight)
+(put 'cm-highlight 'beginning-op 'cm-beginning-of-highlight)
+(put 'cm-highlight 'end-op 'cm-end-of-highlight)
 
 (defun cm-bounds-of-markup-at-point (type)
   "Return the bounds of markup TYPE at point.
@@ -405,10 +384,10 @@ is ignored. The same holds for highlights: the following comment
 is not included."
   (if (thing-at-point type)
       (let ((beg (save-excursion
-                   (funcall (intern (concat "cm-beginning-" (substring (symbol-name type) 3))))
+                   (funcall (intern (concat "cm-beginning-of-" (substring (symbol-name type) 3))))
                    (point)))
             (end (save-excursion
-                   (funcall (intern (concat "cm-end-" (substring (symbol-name type) 3))))
+                   (funcall (intern (concat "cm-end-of-" (substring (symbol-name type) 3))))
                    (point))))
         (list beg end))))
 
@@ -417,7 +396,7 @@ is not included."
 Return a list of the form (TYPE TEXT START-POS END-POS), or NIL
 if point is not inside a markup."
   (let ((type (catch 'found
-                (dolist (type (mapcar #'car cm-delimiter-regexps))
+                (dolist (type (mapcar #'car cm-delimiters))
                   (when (thing-at-point type)
                     (throw 'found type))))))
     (when type
@@ -432,7 +411,7 @@ kind of markup, simply return CHANGE."
   (cond
    ((eq (car change) 'cm-comment)
     (save-excursion
-      (cm-beginning-comment)
+      (cm-beginning-of-comment)
       (skip-chars-backward "[:space:]") ; allow for any whitespace between highlight and comment
       (backward-char 2) ; a highlight ends in "}}"
       (let ((highlight (cm-markup-at-point)))
@@ -441,7 +420,7 @@ kind of markup, simply return CHANGE."
           change))))
    ((eq (car change) 'cm-highlight)
     (save-excursion
-      (cm-end-highlight)
+      (cm-end-of-highlight)
       (skip-chars-forward "[:space:]") ; allow for any whitespace between highlight and comment
       (forward-char 3) ; a comment starts with "{>>"
       (let ((comment (cm-markup-at-point)))
