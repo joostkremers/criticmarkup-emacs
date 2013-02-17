@@ -33,63 +33,20 @@
 
 ;;; Commentary:
 
-;; CriticMarkup for Emacs
-;; ======================
-
-;; cm-mode is a minor mode that provides (rudimentary) support for
-;; CriticMarkup in Emacs.
-
-;; CriticMarkup defines the following patterns for marking changes to a
-;; text:
-
-;; -   Addition {++ ++}
-;; -   Deletion {-- --}
-;; -   Substitution {~~ ~> ~~}
-;; -   Comment {>> <<}
-;; -   Highlight {{ }}{>> <<}
-
-;; Note: additions are called insertions here, because it allows us to use
-;; mnemonic key bindings.
-
-;; Activating cm-mode provides key bindings to insert the patterns above
-;; and thus mark one's changes to the text. The provided key bindings are:
-
-;; -   C-c * i: insert text
-;; -   C-c * d: delete text
-;; -   C-c * s: substitute text
-;; -   C-c * c: insert a comment
-;; -   C-c * h: highlight text and insert a comment
-
-;; The commands to delete, substitute and highlight text all operate on the
-;; region. The commands for inserting and substituting text and for
-;; inserting a comment (which includes the command to highlight text) all
-;; put the cursor at the correct position, so you can start typing right
-;; away.
-
-;; cm-mode also adds the markup patterns defined by CriticMarkup to
-;; font-lock-keywords and provides customisable faces to highlight them.
-;; The customisation group is called criticmarkup.
-
-;; TODO:
-
-;; -   Commands to accept or reject the change at point (C-c * a and
-;;     C-c * r)
-;; -   Command to accept or reject all changes interactively (C-c * A)
-;; -   Mouse support
 
 ;;; Code:
 
 (require 'thingatpt)
 
-(defvar cm-delimiter-regexps '((cm-insertion "{\\+\\+" "\\+\\+}")
+(defvar cm-delimiter-regexps '((cm-addition "{\\+\\+" "\\+\\+}")
                                (cm-deletion "{--" "--}")
                                (cm-substitution "{~~" "~~}")
                                (cm-comment "{>>" "<<}")
                                (cm-highlight "{{" ".}}")) ; note the dot
   "CriticMarkup Delimiters.")
 
-(defvar cm-insertion-regexp "\\(?:{\\+\\+.*?\\+\\+}\\)"
-  "CriticMarkup insertion regexp.")
+(defvar cm-addition-regexp "\\(?:{\\+\\+.*?\\+\\+}\\)"
+  "CriticMarkup addition regexp.")
 
 (defvar cm-deletion-regexp "\\(?:{--.*?--}\\)"
   "CriticMarkup deletion regexp.")
@@ -109,8 +66,8 @@
 
 (defgroup criticmarkup nil "Minor mode for CriticMarkup." :group 'wp)
 
-(defface cm-insertion-face '((t (:foreground "green")))
-  "*Face for CriticMarkup insertions."
+(defface cm-addition-face '((t (:foreground "green")))
+  "*Face for CriticMarkup additions."
   :group 'criticmarkup)
 
 (defface cm-deletion-face '((t (:foreground "red")))
@@ -135,13 +92,13 @@
 
 (defvar cm-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\C-c*i" 'cm-insertion)
+    (define-key map "\C-c*a" 'cm-addition)
     (define-key map "\C-c*d" 'cm-deletion)
     (define-key map "\C-c*s" 'cm-substitution)
     (define-key map "\C-c*c" 'cm-comment)
     (define-key map "\C-c*h" 'cm-highlight)
-    (define-key map "\C-c*a" 'cm-accept/reject-change-at-point)
-    (define-key map "\C-c*A" 'cm-accept/reject-all)
+    (define-key map "\C-c*i" 'cm-accept/reject-change-at-point)
+    (define-key map "\C-c*I" 'cm-accept/reject-all)
     map)
   "Keymap for cm-mode.")
 
@@ -151,7 +108,7 @@
   :init-value nil :lighter " cm" :global nil
   (cond
    (cm-mode                             ; cm-mode is turned on
-    (font-lock-add-keywords nil `((,cm-insertion-regexp . 'cm-insertion-face)
+    (font-lock-add-keywords nil `((,cm-addition-regexp . 'cm-addition-face)
                                   (,cm-deletion-regexp . 'cm-deletion-face)
                                   (,cm-substitution-regexp . 'cm-substitution-face)
                                   (,cm-comment-regexp . 'cm-comment-face)
@@ -159,7 +116,7 @@
     (setq cm-current-markup-overlay (make-overlay 1 1))
     (overlay-put cm-current-markup-overlay 'face 'highlight))
    ((not cm-mode)                       ; cm-mode is turned off
-    (font-lock-remove-keywords nil `((,cm-insertion-regexp . 'cm-insertion-face)
+    (font-lock-remove-keywords nil `((,cm-addition-regexp . 'cm-addition-face)
                                      (,cm-deletion-regexp . 'cm-deletion-face)
                                      (,cm-substitution-regexp . 'cm-substitution-face)
                                      (,cm-comment-regexp . 'cm-comment-face)
@@ -177,8 +134,8 @@
   (interactive)
   (cm-mode -1))
 
-(defun cm-insertion ()
-  "Make an insertion."
+(defun cm-addition ()
+  "Make an addition."
   (interactive)
   (when (cm-markup-at-point)
     (error "Already inside a change"))
@@ -219,8 +176,8 @@
     (insert (concat "{{" text "}}{>><<}"))
     (backward-char 3)))
 
-(defun cm-forward-insertion (&optional n)
-  "Move forward N insertion markups.
+(defun cm-forward-addition (&optional n)
+  "Move forward N addition markups.
 If N is negative, move backward."
   (or n (setq n 1))
   (cond
@@ -236,17 +193,17 @@ If N is negative, move backward."
       (forward-char))
     (re-search-backward "{\\+\\+" nil t (abs n)))))
 
-(defun cm-beginning-insertion ()
-  "Move to the beginning of an insertion."
-  (cm-forward-insertion -1))
+(defun cm-beginning-addition ()
+  "Move to the beginning of an addition."
+  (cm-forward-addition -1))
 
-(defun cm-end-insertion ()
-  "Move to the end of an insertion."
-  (cm-forward-insertion 1))
+(defun cm-end-addition ()
+  "Move to the end of an addition."
+  (cm-forward-addition 1))
 
-(put 'cm-insertion 'forward-op 'cm-forward-insertion)
-(put 'cm-insertion 'beginning-op 'cm-beginning-insertion)
-(put 'cm-insertion 'end-op 'cm-end-insertion)
+(put 'cm-addition 'forward-op 'cm-forward-addition)
+(put 'cm-addition 'beginning-op 'cm-beginning-addition)
+(put 'cm-addition 'end-op 'cm-end-addition)
 
 (defun cm-forward-deletion (&optional n)
   "Move forward N deletion markups.
@@ -365,7 +322,7 @@ If N is negative, move backward."
 The return value is a list of the form (START-POS END-POS). If
 point is not within a markup of TYPE, return NIL.
 
-TYPE is one of `cm-insertion', `cm-deletion', `cm-substitution',
+TYPE is one of `cm-addition', `cm-deletion', `cm-substitution',
 `cm-comment', or `cm-highlight'. Note that in the case of
 comments, only the comment is returned, any preceding highlight
 is ignored. The same holds for highlights: the following comment
@@ -425,7 +382,7 @@ kind of markup, simply return CHANGE."
       (setq change (cm-expand-change change)) ; include highlight & comment into one change
       (move-overlay cm-current-markup-overlay (third change) (fourth change))
       (let ((action (cond
-                     ((memq (car change) '(cm-insertion cm-deletion cm-substitution))
+                     ((memq (car change) '(cm-addition cm-deletion cm-substitution))
                       (read-char-choice "(a)ccept/(r)eject/(s)kip/(q)uit? " '(?a ?r ?s ?q) t))
                      ((memq (car change) '(cm-comment cm-highlight))
                       (read-char-choice "(d)elete/(k)eep/(q)uit? " '(?d ?k ?s ?q) t)))))
@@ -437,14 +394,14 @@ kind of markup, simply return CHANGE."
 (defun cm-substitution-string (change action)
   "Create the string to substitute CHANGE.
 ACTION is a character, either `a' (accept), `r' (reject), or
-`d' (delete). `a' and `r' are valid for insertions, deletions and
+`d' (delete). `a' and `r' are valid for additions, deletions and
 substitutions, `d' for comments and highlights."
   (when (eq action ?r)
     (setq action nil)) ; so we can use a simple if rather than a cond
   (let ((type (first change))
         (text (second change)))
     (cond
-     ((eq type 'cm-insertion)
+     ((eq type 'cm-addition)
       (if action (substring text 3 -3)
         ""))
      ((eq type 'cm-deletion)
