@@ -103,6 +103,10 @@
 (defvar cm-highlight-regexp "\\(?:{{.*?}}\\)"
   "CriticMarkup highlight regexp.")
 
+(defvar cm-current-markup-overlay nil
+  "Overlay marking the current highlight.")
+(make-variable-buffer-local 'cm-current-markup-overlay)
+
 (defgroup criticmarkup nil "Minor mode for CriticMarkup." :group 'wp)
 
 (defface cm-insertion-face '((t (:foreground "green")))
@@ -152,13 +156,16 @@
                                   (,cm-deletion-regexp . 'cm-deletion-face)
                                   (,cm-substitution-regexp . 'cm-substitution-face)
                                   (,cm-comment-regexp . 'cm-comment-face)
-                                  (,cm-highlight-regexp . 'cm-highlight-face)) t))
+                                  (,cm-highlight-regexp . 'cm-highlight-face)) t)
+    (setq cm-current-markup-overlay (make-overlay 1 1))
+    (overlay-put cm-current-markup-overlay 'face 'highlight))
    ((not cm-mode)                       ; cm-mode is turned off
     (font-lock-remove-keywords nil `((,cm-insertion-regexp . 'cm-insertion-face)
                                      (,cm-deletion-regexp . 'cm-deletion-face)
                                      (,cm-substitution-regexp . 'cm-substitution-face)
                                      (,cm-comment-regexp . 'cm-comment-face)
-                                     (,cm-highlight-regexp . 'cm-highlight-face))))))
+                                     (,cm-highlight-regexp . 'cm-highlight-face)))
+    (remove-overlays))))
 
 ;;;###autoload
 (defun turn-on-cm ()
@@ -346,30 +353,104 @@ If N is negative, move backward."
 
 (defun cm-bounds-of-markup-at-point (type)
   "Return the bounds of markup TYPE at point.
-If point is not within a markup of TYPE, return NIL.
+The return value is a list of the form (START-POS END-POS). If
+point is not within a markup of TYPE, return NIL.
 
 TYPE is one of `cm-insertion', `cm-deletion', `cm-substitution',
 `cm-comment', or `cm-highlight'. Note that in the case of
 comments, only the comment is returned, any preceding highlight
 is ignored. The same holds for highlights: the following comment
 is not included."
-  (if (symbolp type)
-      (setq type (symbol-name type)))
   (if (thing-at-point type)
       (let ((beg (save-excursion
-                   (funcall (intern (concat "cm-beginning-" type)))
+                   (funcall (intern (concat "cm-beginning-" (substring (symbol-name type) 3))))
                    (point)))
             (end (save-excursion
-                   (funcall (intern (concat "cm-end-" type)))
+                   (funcall (intern (concat "cm-end-" (substring (symbol-name type) 3))))
                    (point))))
-        (cons beg end))))
+        (list beg end))))
 
 (defun cm-markup-at-point ()
-  "Return the type of markup at point, or NIL if point in not inside a markup."
-  (catch 'found
-    (dolist (type (mapcar #'car cm-delimiter-regexps))
-      (when (thing-at-point type)
-        (throw 'found type)))))
+  "Find the markup at point.
+Return a list of the form (TYPE TEXT START-POS END-POS), or NIL
+if point is not inside a markup."
+  (let ((type (catch 'found
+                (dolist (type (mapcar #'car cm-delimiter-regexps))
+                  (when (thing-at-point type)
+                    (throw 'found type))))))
+    (when type
+      (append (list type) (list (thing-at-point type)) (cm-bounds-of-markup-at-point type)))))
+
+(defun cm-expand-change (change)
+  "Expand a comment or highlight markup.
+If CHANGE is a comment, check if there's a highlight preceding
+it; if so, include it and change the type accordingly. If CHANGE
+is a highlight, include the comment following it. For any other
+kind of markup, simply return CHANGE."
+  (cond
+   ((eq (car change) 'cm-comment)
+    (save-excursion
+      (cm-beginning-comment)
+      (skip-chars-backward "[:space:]") ; allow for any whitespace between highlight and comment
+      (backward-char 2) ; a highlight ends in "}}"
+      (let ((highlight (cm-markup-at-point)))
+        (if highlight
+            (list 'cm-highlight (concat (second highlight) (second change)) (third highlight) (fourth change))
+          change))))
+   ((eq (car change) 'cm-highlight)
+    (save-excursion
+      (cm-end-highlight)
+      (skip-chars-forward "[:space:]") ; allow for any whitespace between highlight and comment
+      (forward-char 3) ; a comment starts with "{>>"
+      (let ((comment (cm-markup-at-point)))
+        (if comment
+            (list 'cm-highlight (concat (second change) (second comment)) (third change) (fourth comment))
+          change))))
+   (t change)))
+
+(defun cm-accept/reject-change-at-point ()
+  "Accept or reject change at point interactively."
+  (interactive)
+  (let ((change (cm-markup-at-point)))
+    (when change
+      (setq change (cm-expand-change change)) ; include highlight & comment into one change
+      (move-overlay cm-current-markup-overlay (third change) (fourth change))
+      (let ((action (cond
+                     ((memq (car change) '(cm-insertion cm-deletion cm-substitution))
+                      (ignore-errors      ; return NIL if user presses C-g
+                        (read-char-choice "(a)ccept/(r)eject/(s)kip? " '(?a ?r ?s))))
+                     ((memq (car change) '(cm-comment cm-highlight))
+                      (ignore-errors
+                        (read-char-choice "(d)elete/(s)kip? " '(?d ?s)))))))
+        (delete-overlay cm-current-markup-overlay)
+        ;; for now, C-g is the same as ?s
+        (cond
+         ((memq action '(?a ?r))
+          (delete-region (third change) (fourth change))
+          (insert (cm-substitution-string change action)))
+         ((eq action ?d)
+          (delete-region (third change) (fourth change))))))))
+
+(defun cm-substitution-string (change action)
+  "Create the string to substitute CHANGE.
+ACTION is a character, either `a' (accept), `r' (reject). This
+function only works on insertions, deletions and substitutions.
+In any other case, the text of the change is returned
+unchanged (including braces)."
+  (when (eq action ?r)
+    (setq action nil)) ; so we can use a simple if rather than a cond
+  (let ((type (first change))
+        (text (second change)))
+    (cond
+     ((eq type 'cm-insertion)
+      (if action (substring text 3 -3)
+        ""))
+     ((eq type 'cm-deletion)
+      (if action "" (substring text 3 -3)))
+     ((eq type 'cm-substitution)
+      (string-match "{~~\\(.*?\\)~>\\(.*?\\)~~}" text)
+      (match-string (if action 2 1) text))
+     (t text))))
 
 (provide 'cm-mode)
 
