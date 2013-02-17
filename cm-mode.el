@@ -81,11 +81,11 @@
 
 (require 'thingatpt)
 
-(defvar cm-delimiter-regexps '((insertion "{\\+\\+" "\\+\\+}")
-                               (deletion "{--" "--}")
-                               (substitution "{~~" "~~}")
-                               (comment "{>>" "<<}")
-                               (highlight "{{" ".}}")) ; note the dot
+(defvar cm-delimiter-regexps '((cm-insertion "{\\+\\+" "\\+\\+}")
+                               (cm-deletion "{--" "--}")
+                               (cm-substitution "{~~" "~~}")
+                               (cm-comment "{>>" "<<}")
+                               (cm-highlight "{{" ".}}")) ; note the dot
   "CriticMarkup Delimiters.")
 
 (defvar cm-insertion-regexp "\\(?:{\\+\\+.*?\\+\\+}\\)"
@@ -346,10 +346,16 @@ If N is negative, move backward."
 
 (defun cm-bounds-of-markup-at-point (type)
   "Return the bounds of markup TYPE at point.
-If point is not within a markup of TYPE, return NIL."
+If point is not within a markup of TYPE, return NIL.
+
+TYPE is one of `cm-insertion', `cm-deletion', `cm-substitution',
+`cm-comment', or `cm-highlight'. Note that in the case of
+comments, only the comment is returned, any preceding highlight
+is ignored. The same holds for highlights: the following comment
+is not included."
   (if (symbolp type)
       (setq type (symbol-name type)))
-  (if (thing-at-point (intern (concat "cm-" type)))
+  (if (thing-at-point type)
       (let ((beg (save-excursion
                    (funcall (intern (concat "cm-beginning-" type)))
                    (point)))
@@ -361,8 +367,8 @@ If point is not within a markup of TYPE, return NIL."
 (defun cm-markup-at-point ()
   "Return the type of markup at point, or NIL if point in not inside a markup."
   (catch 'found
-    (dolist (type (mapcar #'car cm-delimiter-regexps) nil)
-      (when (thing-at-point (intern (concat "cm-" (symbol-name type))))
+    (dolist (type (mapcar #'car cm-delimiter-regexps))
+      (when (thing-at-point type)
         (throw 'found type)))))
 
 (provide 'cm-mode)
