@@ -13,7 +13,7 @@ CriticMarkup defines the following patterns for marking changes to a text:
 
 Note: additions are called insertions here, because it allows us to use mnemonic key bindings. {>>That's because 'a' is reserved for accepting a change. Perhaps you should mention that?<<}
 
-Activating `cm-mode` provides key{--s--} {++bindings++} to insert the {~~patterns~>markup~~} above and thus mark one's changes to the text. The provided key bindings are:
+Activating `cm-mode` provides key{--s--} {++bindings++}to insert the {~~patterns~>markup~~} above and thus mark one's changes to the text. The provided key bindings are:
 
 - `C-c * i`: insert text
 - `C-c * d`: delete text
