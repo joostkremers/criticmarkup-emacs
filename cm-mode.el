@@ -475,7 +475,7 @@ substitutions, `d' for comments and highlights."
   (when (eq action ?r)
     (setq action nil)) ; so we can use a simple if rather than a cond
   (let ((type (first change))
-        (text (second change)))
+        (text (delete ?\n (second change)))) ; delete newlines because they mess up string-match below.
     (cond
      ((eq type 'cm-addition)
       (if action (substring text 3 -3)
