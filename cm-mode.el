@@ -140,9 +140,8 @@
     (define-key map "\C-c*s" 'cm-substitution)
     (define-key map "\C-c*c" 'cm-comment)
     (define-key map "\C-c*h" 'cm-highlight)
-    (define-key map "\C-c*a" 'cm-accept-change)
-    (define-key map "\C-c*r" 'cm-reject-change)
-    (define-key map "-C-c*A" 'cm-accept/reject-all)
+    (define-key map "\C-c*a" 'cm-accept/reject-change-at-point)
+    (define-key map "\C-c*A" 'cm-accept/reject-all)
     map)
   "Keymap for cm-mode.")
 
@@ -181,18 +180,24 @@
 (defun cm-insertion ()
   "Make an insertion."
   (interactive)
+  (when (cm-markup-at-point)
+    (error "Already inside a change"))
   (insert "{++++}")
   (backward-char 3))
 
 (defun cm-deletion (beg end)
   "Mark text for deletion."
   (interactive "r")
+  (when (cm-markup-at-point)
+    (error "Already inside a change"))
   (let ((text (delete-and-extract-region beg end)))
     (insert (concat "{--" text "--}"))))
 
 (defun cm-substitution (beg end)
   "Mark a substitution."
   (interactive "r")
+  (when (cm-markup-at-point)
+    (error "Already inside a change"))
   (let ((text (delete-and-extract-region beg end)))
     (insert (concat "{~~" text "~>~~}"))
     (backward-char 3)))
@@ -200,12 +205,16 @@
 (defun cm-comment ()
   "Add a comment."
   (interactive)
+  (when (cm-markup-at-point)
+    (error "Already inside a change"))
   (insert "{>><<}")
   (backward-char 3))
 
 (defun cm-highlight (beg end)
   "Highlight a stretch of text and add a comment."
   (interactive "r")
+  (when (cm-markup-at-point)
+    (error "Already inside a change"))
   (let ((text (delete-and-extract-region beg end)))
     (insert (concat "{{" text "}}{>><<}"))
     (backward-char 3)))
@@ -417,26 +426,19 @@ kind of markup, simply return CHANGE."
       (move-overlay cm-current-markup-overlay (third change) (fourth change))
       (let ((action (cond
                      ((memq (car change) '(cm-insertion cm-deletion cm-substitution))
-                      (ignore-errors      ; return NIL if user presses C-g
-                        (read-char-choice "(a)ccept/(r)eject/(s)kip? " '(?a ?r ?s))))
+                      (read-char-choice "(a)ccept/(r)eject/(s)kip/(q)uit? " '(?a ?r ?s ?q) t))
                      ((memq (car change) '(cm-comment cm-highlight))
-                      (ignore-errors
-                        (read-char-choice "(d)elete/(s)kip? " '(?d ?s)))))))
+                      (read-char-choice "(d)elete/(k)eep/(q)uit? " '(?d ?k ?s ?q) t)))))
         (delete-overlay cm-current-markup-overlay)
-        ;; for now, C-g is the same as ?s
-        (cond
-         ((memq action '(?a ?r))
+        (when (memq action '(?a ?r ?d))
           (delete-region (third change) (fourth change))
-          (insert (cm-substitution-string change action)))
-         ((eq action ?d)
-          (delete-region (third change) (fourth change))))))))
+          (insert (cm-substitution-string change action)))))))
 
 (defun cm-substitution-string (change action)
   "Create the string to substitute CHANGE.
-ACTION is a character, either `a' (accept), `r' (reject). This
-function only works on insertions, deletions and substitutions.
-In any other case, the text of the change is returned
-unchanged (including braces)."
+ACTION is a character, either `a' (accept), `r' (reject), or
+`d' (delete). `a' and `r' are valid for insertions, deletions and
+substitutions, `d' for comments and highlights."
   (when (eq action ?r)
     (setq action nil)) ; so we can use a simple if rather than a cond
   (let ((type (first change))
@@ -450,7 +452,13 @@ unchanged (including braces)."
      ((eq type 'cm-substitution)
       (string-match "{~~\\(.*?\\)~>\\(.*?\\)~~}" text)
       (match-string (if action 2 1) text))
-     (t text))))
+     ((and (eq type 'cm-comment)
+           (eq action ?d))
+      "")
+     ((and (eq type 'cm-highlight)
+           (eq action ?d))
+      (string-match "{{\\(.*?\\)}}" text)
+      (match-string 1 text)))))
 
 (provide 'cm-mode)
 
