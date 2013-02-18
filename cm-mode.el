@@ -186,19 +186,21 @@
   :init-value nil :lighter " cm" :global nil
   (cond
    (cm-mode                             ; cm-mode is turned on
-    (font-lock-add-keywords nil `((,cm-addition-regexp . 'cm-addition-face)
-                                  (,cm-deletion-regexp . 'cm-deletion-face)
-                                  (,cm-substitution-regexp . 'cm-substitution-face)
-                                  (,cm-comment-regexp . 'cm-comment-face)
-                                  (,cm-highlight-regexp . 'cm-highlight-face)) t)
+    (font-lock-add-keywords nil `((,cm-addition-regexp 0 '(face cm-addition-face mouse-face (:inherit 'cm-addition-face :inverse-video t)))
+                                  (,cm-deletion-regexp 0 '(face cm-deletion-face mouse-face (:inherit 'cm-deletion-face :inverse-video t)))
+                                  (,cm-substitution-regexp 0 '(face cm-substitution-face mouse-face (:inherit 'cm-substitution-face :inverse-video t)))
+                                  (,cm-comment-regexp 0 '(face cm-comment-face mouse-face (:inherit 'cm-comment-face :inverse-video t)))
+                                  (,cm-highlight-regexp 0 '(face cm-highlight-face mouse-face (:inherit 'cm-highlight-face :inverse-video t)))) t)
+    (add-to-list 'font-lock-extra-managed-props 'mouse-face)
     (setq cm-current-markup-overlay (make-overlay 1 1))
     (overlay-put cm-current-markup-overlay 'face 'highlight))
    ((not cm-mode)                       ; cm-mode is turned off
-    (font-lock-remove-keywords nil `((,cm-addition-regexp . 'cm-addition-face)
-                                     (,cm-deletion-regexp . 'cm-deletion-face)
-                                     (,cm-substitution-regexp . 'cm-substitution-face)
-                                     (,cm-comment-regexp . 'cm-comment-face)
-                                     (,cm-highlight-regexp . 'cm-highlight-face)))
+    (font-lock-remove-keywords nil `((,cm-addition-regexp 0 '(face cm-addition-face mouse-face (:inherit 'cm-addition-face :inverse-video t)))
+                                     (,cm-deletion-regexp 0 '(face cm-deletion-face mouse-face (:inherit 'cm-deletion-face :inverse-video t)))
+                                     (,cm-substitution-regexp 0 '(face cm-substitution-face mouse-face (:inherit 'cm-substitution-face :inverse-video t)))
+                                     (,cm-comment-regexp 0 '(face cm-comment-face mouse-face (:inherit 'cm-comment-face :inverse-video t)))
+                                     (,cm-highlight-regexp 0 '(face cm-highlight-face mouse-face (:inherit 'cm-highlight-face :inverse-video t)))))
+    (setq font-lock-extra-managed-props (delq 'mouse-face font-lock-extra-managed-props))
     (remove-overlays))))
 
 ;;;###autoload
