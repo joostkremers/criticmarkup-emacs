@@ -108,7 +108,9 @@
 ;;
 ;; -   Command to accept or reject all changes interactively (C-c * I)
 ;; -   Commands to accept or reject all changes in one go
-;; -   Mouse support
+;; -   Follow changes mode: automatically insert CriticMarkup when changes
+;; -   are made to the buffer.
+;; -   Mouse support?
 
 ;;; Code:
 
