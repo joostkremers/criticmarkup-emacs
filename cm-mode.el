@@ -281,6 +281,14 @@ If N is negative, move backward."
           (forward-char))
         (re-search-backward (regexp-quote delim) nil t (abs n)))))))
 
+(defun cm-beginning-of-markup (type)
+  "Move to the beginning of a markup of TYPE."
+  (cm-forward-markup type -1))
+
+(defun cm-end-of-markup (type)
+  "Move to the end of a markup of TYPE."
+  (cm-forward-markup type 1))
+
 (defun cm-forward-addition (&optional n)
   "Move forward N addition markups.
 If N is negative, move backward."
@@ -386,10 +394,10 @@ is ignored. The same holds for highlights: the following comment
 is not included."
   (if (thing-at-point type)
       (let ((beg (save-excursion
-                   (funcall (intern (concat "cm-beginning-of-" (substring (symbol-name type) 3))))
+                   (cm-beginning-of-markup type)
                    (point)))
             (end (save-excursion
-                   (funcall (intern (concat "cm-end-of-" (substring (symbol-name type) 3))))
+                   (cm-end-of-markup type)
                    (point))))
         (list beg end))))
 
@@ -405,7 +413,7 @@ if point is not inside a markup."
       (append (list type) (list (thing-at-point type)) (cm-bounds-of-markup-at-point type)))))
 
 (defun cm-expand-change (change)
-  "Expand a markup with a following comment.
+  "Expand CHANGE with a following comment or, if a comment, with a preceding change.
 If CHANGE is a comment, check if there's another change preceding
 it; if so, include it and change the type accordingly. If CHANGE
 is of any other type, check if there's a commend and include it."
@@ -421,7 +429,7 @@ is of any other type, check if there's a commend and include it."
           change))))
    (t
     (save-excursion
-      (funcall (intern (concat "cm-end-of-" (substring (symbol-name (car change)) 3))))
+      (cm-end-of-markup (car change))
       (skip-chars-forward "[:space:]") ; allow for any whitespace between change and comment
       (forward-char 3) ; adjust point
       (let ((comment (cm-markup-at-point)))
