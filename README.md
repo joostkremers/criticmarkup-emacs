@@ -11,7 +11,7 @@ CriticMarkup defines the following patterns for marking changes to a text:
 - Comment {>> <<}
 - Highlight {{ }}{>> <<}
 
-Activating `cm-mode` provides key{--s--} {++bindings ++}to insert the {~~patterns~>markup~~} above and thus mark one's changes to the text. The provided key bindings are: {>>Should you mention that these are nicely mnemonic?<<}
+Activating `cm-mode` provides key{--s--} {++bindings ++}to insert the {~~patterns~>markup~~} above and thus mark one's changes to the text. The provided {{key bindings}}{>>Should you mention that these are nicely mnemonic?<<} are:
 
 - `C-c * a`: add text
 - `C-c * d`: delete text
