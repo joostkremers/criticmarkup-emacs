@@ -19,12 +19,12 @@ Activating `cm-mode` provides key{--s--} {++bindings ++}to insert the {~~pattern
 - `C-c * c`: insert a comment
 - `C-c * h`: highlight text and insert a comment
 
-The commands to delete, substitute and highlight text all operate on the region. The commands for inserting and substituting text and for inserting a comment {{(which includes the command to highlight text)}}{>>That's good<<} all put the cursor at the correct position, so you can start typing right away.
+The commands to delete, substitute and highlight text all operate on the region. The commands for inserting and substituting text and for inserting a comment{++ or highlight++} all put the cursor at the correct position, so you can start typing right away.
 
 
 ## Accepting or rejecting changes ##
 
-You can interactively accept or reject a change by putting the cursor inside it and hitting `C-c * i`. For additions, deletions and substitutions, you get a choice between `a` to accept the change or `r` to reject it. There are two other choices, `s` to skip this change or `q` to quit. Both leave the change untouched and if you're just dealing with the change at point, they are essentially identical. (They have different functions when accepting or rejecting all changes interactively, though.)
+You can interactively accept or reject a change by putting the cursor inside it and hitting `C-c * i`. For additions, deletions and substitutions, you get a choice between `a` to accept the change or `r` to reject it. There are two other choices, `s` to skip this change or `q` to quit. Both leave the change untouched and if you're just dealing with the change at point, they are essentially identical. {>>(They have different functions when accepting or rejecting all changes interactively, though.)<<}
 
 For comments and highlights, the choices are different: `d` to delete the comment or highlight (whereby the latter of course retains the highlighted text, but the comment and the markup are removed), or `k` to keep the comment or highlight. Again `q` quits and is essentially identical to `k`. (Note that you can also use `s` instead of `k`, in case you get used to skipping changes that way.)
 
@@ -42,6 +42,6 @@ To mitigate this problem, you can use soft wrap (with `visual-line-mode`). Since
 
 ## TODO ##
 
-- Command to accept or reject all changes interactively (`C-c * I`)
-- Commands to accept or reject all changes in one go
-- Mouse support
+- Command to accept or reject all changes interactively (`C-c * I`).
+- Commands to accept or reject all changes in one go. {>>These won't be bound to keys, though.<<}
+- Mouse support.
