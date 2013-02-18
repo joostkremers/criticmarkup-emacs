@@ -403,31 +403,29 @@ if point is not inside a markup."
       (append (list type) (list (thing-at-point type)) (cm-bounds-of-markup-at-point type)))))
 
 (defun cm-expand-change (change)
-  "Expand a comment or highlight markup.
-If CHANGE is a comment, check if there's a highlight preceding
+  "Expand a markup with a following comment.
+If CHANGE is a comment, check if there's another change preceding
 it; if so, include it and change the type accordingly. If CHANGE
-is a highlight, include the comment following it. For any other
-kind of markup, simply return CHANGE."
+is of any other type, check if there's a commend and include it."
   (cond
    ((eq (car change) 'cm-comment)
     (save-excursion
       (cm-beginning-of-comment)
-      (skip-chars-backward "[:space:]") ; allow for any whitespace between highlight and comment
-      (backward-char 2) ; a highlight ends in "}}"
-      (let ((highlight (cm-markup-at-point)))
-        (if highlight
-            (list 'cm-highlight (concat (second highlight) (second change)) (third highlight) (fourth change))
+      (skip-chars-backward "[:space:]") ; allow for any whitespace between change and comment
+      (backward-char 3) ; adjust point
+      (let ((preceding (cm-markup-at-point)))
+        (if preceding
+            (list (car preceding) (concat (second preceding) (second change)) (third preceding) (fourth change))
           change))))
-   ((eq (car change) 'cm-highlight)
+   (t
     (save-excursion
-      (cm-end-of-highlight)
-      (skip-chars-forward "[:space:]") ; allow for any whitespace between highlight and comment
-      (forward-char 3) ; a comment starts with "{>>"
+      (funcall (intern (concat "cm-end-of-" (substring (symbol-name (car change)) 3))))
+      (skip-chars-forward "[:space:]") ; allow for any whitespace between change and comment
+      (forward-char 3) ; adjust point
       (let ((comment (cm-markup-at-point)))
         (if comment
             (list 'cm-highlight (concat (second change) (second comment)) (third change) (fourth comment))
-          change))))
-   (t change)))
+          change))))))
 
 (defun cm-accept/reject-change-at-point ()
   "Accept or reject change at point interactively."
