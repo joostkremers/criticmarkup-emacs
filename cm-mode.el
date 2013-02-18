@@ -452,7 +452,7 @@ ACTION is a character, either `a' (accept), `r' (reject), or
 `d' (delete). `a' and `r' are valid for additions, deletions and
 substitutions, `d' for comments and highlights."
   (when (eq action ?r)
-    (setq action nil)) ; so we can use a simple if rather than a cond
+    (setq action nil)) ; so we can use a simple `if' rather than a `cond'
   (let ((type (first change))
         (text (delete ?\n (second change)))) ; delete newlines because they mess up string-match below.
     (cond
