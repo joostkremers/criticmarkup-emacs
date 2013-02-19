@@ -284,13 +284,24 @@ If N is negative, move backward."
           (forward-char))
         (re-search-backward (regexp-quote delim) nil t (abs n)))))))
 
+;; Note: cm-{beginning|end}-of-* are for thing-at-point. They move point to
+;; the position *inside* the opening/closing brace. The reason is that
+;; thing-at-point otherwise thinks point is inside a markup if it is
+;; actually immediately outside the brace, i.e., `|{++...' or `...++}|'. As
+;; a result, it would not be possible to add a change right before or after
+;; an existing change, which would be counterintuitive. So don't use
+;; cm-{beginning|end}-of-* to actually move point beyond a markup, use
+;; cm-forward-* for that.
+
 (defun cm-beginning-of-markup (type)
   "Move to the beginning of a markup of TYPE."
-  (cm-forward-markup type -1))
+  (cm-forward-markup type -1)
+  (forward-char))
 
 (defun cm-end-of-markup (type)
   "Move to the end of a markup of TYPE."
-  (cm-forward-markup type 1))
+  (cm-forward-markup type 1)
+  (backward-char))
 
 (defun cm-forward-addition (&optional n)
   "Move forward N addition markups.
@@ -299,11 +310,13 @@ If N is negative, move backward."
 
 (defun cm-beginning-of-addition ()
   "Move to the beginning of an addition."
-  (cm-forward-markup 'cm-addition -1))
+  (cm-forward-markup 'cm-addition -1)
+  (forward-char))
 
 (defun cm-end-of-addition ()
   "Move to the end of an addition."
-  (cm-forward-markup 'cm-addition 1))
+  (cm-forward-markup 'cm-addition 1)
+  (backward-char))
 
 (put 'cm-addition 'forward-op 'cm-forward-addition)
 (put 'cm-addition 'beginning-op 'cm-beginning-of-addition)
@@ -316,11 +329,13 @@ If N is negative, move backward."
 
 (defun cm-beginning-of-deletion ()
   "Move to the beginning of an deletion."
-  (cm-forward-markup 'cm-deletion -1))
+  (cm-forward-markup 'cm-deletion -1)
+  (forward-char))
 
 (defun cm-end-of-deletion ()
   "Move to the end of an deletion."
-  (cm-forward-markup 'cm-deletion 1))
+  (cm-forward-markup 'cm-deletion 1)
+  (backward-char))
 
 (put 'cm-deletion 'forward-op 'cm-forward-deletion)
 (put 'cm-deletion 'beginning-op 'cm-beginning-of-deletion)
@@ -333,11 +348,13 @@ If N is negative, move backward."
 
 (defun cm-beginning-of-substitution ()
   "Move to the beginning of an substitution."
-  (cm-forward-markup 'cm-substitution -1))
+  (cm-forward-markup 'cm-substitution -1)
+  (forward-char))
 
 (defun cm-end-of-substitution ()
   "Move to the end of an substitution."
-  (cm-forward-markup 'cm-substitution 1))
+  (cm-forward-markup 'cm-substitution 1)
+  (backward-char))
 
 (put 'cm-substitution 'forward-op 'cm-forward-substitution)
 (put 'cm-substitution 'beginning-op 'cm-beginning-of-substitution)
@@ -350,11 +367,13 @@ If N is negative, move backward."
 
 (defun cm-beginning-of-comment ()
   "Move to the beginning of an comment."
-  (cm-forward-markup 'cm-comment -1))
+  (cm-forward-markup 'cm-comment -1)
+  (forward-char))
 
 (defun cm-end-of-comment ()
   "Move to the end of an comment."
-  (cm-forward-markup 'cm-comment 1))
+  (cm-forward-markup 'cm-comment 1)
+  (backward-char))
 
 (put 'cm-comment 'forward-op 'cm-forward-comment)
 (put 'cm-comment 'beginning-op 'cm-beginning-of-comment)
@@ -402,7 +421,7 @@ is not included."
             (end (save-excursion
                    (cm-end-of-markup type)
                    (point))))
-        (list beg end))))
+        (list (1- beg) (1+ end))))) ; adjust (see comment at cm-beginning-of-markup)
 
 (defun cm-markup-at-point ()
   "Find the markup at point.
