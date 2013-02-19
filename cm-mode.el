@@ -54,14 +54,15 @@
 ;; -   C-c * a: add text
 ;; -   C-c * d: delete text
 ;; -   C-c * s: substitute text
-;; -   C-c * c: insert a comment
-;; -   C-c * h: highlight text and insert a comment
+;; -   C-c * c: insert a comment (possibly with highlight)
 ;;
-;; The commands to delete, substitute and highlight text all operate on the
-;; region. The commands for inserting and substituting text and for
-;; inserting a comment (which includes the command to highlight text) all
-;; put the cursor at the correct position, so you can start typing right
-;; away.
+;; The commands to delete or substitute text operate on the region. The
+;; command to insert a comment can be used with an active region, in which
+;; case the text in the region will be highlighted. It can also be used
+;; inside an existing markup to add a comment to it. If it is used anywhere
+;; else, it just adds a lone comment. The commands for inserting and
+;; substituting text and for inserting a comment all put the cursor at the
+;; correct position, so you can start typing right away.
 ;;
 ;; Accepting or rejecting changes
 ;; ------------------------------
@@ -174,7 +175,6 @@
     (define-key map "\C-c*d" 'cm-deletion)
     (define-key map "\C-c*s" 'cm-substitution)
     (define-key map "\C-c*c" 'cm-comment)
-    (define-key map "\C-c*h" 'cm-highlight)
     (define-key map "\C-c*i" 'cm-accept/reject-change-at-point)
     (define-key map "\C-c*I" 'cm-accept/reject-all)
     map)
@@ -239,23 +239,24 @@
     (insert (concat "{~~" text "~>~~}"))
     (backward-char 3)))
 
-(defun cm-comment ()
-  "Add a comment."
-  (interactive)
-  (when (cm-markup-at-point)
-    (error "Already inside a change"))
-  (insert "{>><<}")
-  (backward-char 3))
-
-(defun cm-highlight (beg end)
-  "Highlight a stretch of text and add a comment."
+(defun cm-comment (beg end)
+  "Add a comment.
+If the region is active, the text in the region is highlighted.
+If point is in an existing change, the comment is added after it."
   (interactive "r")
-  (when (cm-markup-at-point)
-    (error "Already inside a change"))
-  (let ((text (delete-and-extract-region beg end)))
-    (insert (concat "{{" text "}}{>><<}"))
+  (let ((change (cm-markup-at-point))
+        text)
+    (cond
+     (change
+      (deactivate-mark) ; we don't want the region active
+      (cm-forward-markup (car change)))
+     ;; note: we do not account for the possibility that the region
+     ;; contains a change but point is outside of it...
+     ((use-region-p)
+      (setq text (delete-and-extract-region beg end))))
+    (insert (if text (concat "{{" text "}}") "") "{>><<}")
     (backward-char 3)))
-
+  
 (defun cm-forward-markup (type &optional n)
   "Move forward N markups of TYPE.
 If N is negative, move backward."
