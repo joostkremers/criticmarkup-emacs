@@ -176,7 +176,7 @@
     (define-key map "\C-c*s" 'cm-substitution)
     (define-key map "\C-c*c" 'cm-comment)
     (define-key map "\C-c*i" 'cm-accept/reject-change-at-point)
-    (define-key map "\C-c*I" 'cm-accept/reject-all)
+    (define-key map "\C-c*I" 'cm-accept/reject-all-changes)
     map)
   "Keymap for cm-mode.")
 
@@ -455,13 +455,18 @@ is of any other type, check if there's a commend and include it."
       (skip-chars-forward "[:space:]") ; allow for any whitespace between change and comment
       (forward-char 3) ; adjust point
       (let ((comment (cm-markup-at-point)))
-        (if comment
+        (if (eq (car comment) 'cm-comment)
             (list 'cm-highlight (concat (second change) (second comment)) (third change) (fourth comment))
           change))))))
 
-(defun cm-accept/reject-change-at-point ()
-  "Accept or reject change at point interactively."
-  (interactive)
+(defun cm-accept/reject-change-at-point (&optional interactive)
+  "Accept or reject change at point interactively.
+
+Return point if the change is accepted or rejected or the
+position after the change if it is skipped (point is not changed
+in that case). If no change is found at point, the return value
+is NIL."
+  (interactive "p") ; we use "p" to signal that the function was called interactively
   (let ((change (cm-markup-at-point)))
     (when change
       (setq change (cm-expand-change change)) ; include highlight & comment into one change
@@ -472,9 +477,15 @@ is of any other type, check if there's a commend and include it."
                      ((memq (car change) '(cm-comment cm-highlight))
                       (read-char-choice "(d)elete/(k)eep/(q)uit? " '(?d ?k ?s ?q) t)))))
         (delete-overlay cm-current-markup-overlay)
-        (when (memq action '(?a ?r ?d))
+        (when (and (not interactive) (eq action ?q)) ; if the user aborted 
+          (throw 'quit nil))                         ; get out
+        (cond
+         ((memq action '(?a ?r ?d))
           (delete-region (third change) (fourth change))
-          (insert (cm-substitution-string change action)))))))
+          (insert (cm-substitution-string change action))
+          (point))
+         ((memq action '(?s ?k))
+          (fourth change)))))))
 
 (defun cm-substitution-string (change action)
   "Create the string to substitute CHANGE.
@@ -501,6 +512,20 @@ substitutions, `d' for comments and highlights."
            (eq action ?d))
       (string-match "{{\\(.*?\\)}}" text)
       (match-string 1 text)))))
+
+(defun cm-find-next-change ()
+  "Move point forward inside the first change after point."
+  )
+
+(defun cm-accept/reject-all-changes ()
+  "Accept/reject all changes interactively."
+  (interactive)
+  (catch 'quit
+    (let ((delims-regexp (regexp-opt (mapcar #'second cm-delimiters))))
+      (goto-char (point-min))
+      (while (re-search-forward delims-regexp nil t)
+        (let ((pos (cm-accept/reject-change-at-point)))
+          (when pos (goto-char pos))))))) ; move to the end of current change
 
 (provide 'cm-mode)
 
