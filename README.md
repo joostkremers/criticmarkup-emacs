@@ -27,7 +27,7 @@ You can interactively accept or reject a change by putting the cursor inside it 
 
 For comments and highlights, the choices are different: `d` to delete the comment or highlight (whereby the latter of course retains the highlighted text, but the comment and the markup are removed), or `k` to keep the comment or highlight. Again `q` quits and is essentially identical to `k`. (Note that you can also use `s` instead of `k`, in case you get used to skipping changes that way.)
 
-Not implemented yet is the ability to go through all changes in a buffer and accept or reject them one by one, nor the ability to accept or reject all changes all at once.
+You can interactively accept or reject all changes with `C-c * I` (that is a capital `i`). This will go through each change asking you whether you want to accept, reject or skip it, or delete or keep it. Typing `q` quits the accept/reject session.
 
 
 ## Font lock ##
@@ -41,7 +41,6 @@ To mitigate this problem, you can use soft wrap (with `visual-line-mode`). Since
 
 ## TODO ##
 
-- Command to accept or reject all changes interactively (`C-c * I`).
 - Commands to accept or reject all changes in one go. {>>These won't be bound to keys, though.<<}
 - Follow changes mode: automatically insert CriticMarkup when changes are made to the buffer.
 - Mouse support?
