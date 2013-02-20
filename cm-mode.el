@@ -473,9 +473,13 @@ is NIL."
       (move-overlay cm-current-markup-overlay (third change) (fourth change))
       (let ((action (cond
                      ((memq (car change) '(cm-addition cm-deletion cm-substitution))
-                      (read-char-choice "(a)ccept/(r)eject/(s)kip/(q)uit? " '(?a ?r ?s ?q) t))
+                      (read-char-choice (format "%s: (a)ccept/(r)eject/(s)kip/(q)uit? "
+                                                (capitalize (substring (symbol-name (car change)) 3)))
+                                        '(?a ?r ?s ?q) t))
                      ((memq (car change) '(cm-comment cm-highlight))
-                      (read-char-choice "(d)elete/(k)eep/(q)uit? " '(?d ?k ?s ?q) t)))))
+                      (read-char-choice (format "%s: (d)elete/(k)eep/(q)uit? "
+                                                (capitalize (substring (symbol-name (car change)) 3)))
+                                        '(?d ?k ?s ?q) t)))))
         (delete-overlay cm-current-markup-overlay)
         (when (and (not interactive) (eq action ?q)) ; if the user aborted 
           (throw 'quit nil))                         ; get out
