@@ -517,10 +517,6 @@ substitutions, `d' for comments and highlights."
       (string-match "{{\\(.*?\\)}}" text)
       (match-string 1 text)))))
 
-(defun cm-find-next-change ()
-  "Move point forward inside the first change after point."
-  )
-
 (defun cm-accept/reject-all-changes ()
   "Accept/reject all changes interactively."
   (interactive)
