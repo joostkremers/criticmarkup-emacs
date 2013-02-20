@@ -487,10 +487,10 @@ substitutions, `d' for comments and highlights."
         (text (delete ?\n (second change)))) ; delete newlines because they mess up string-match below.
     (cond
      ((eq type 'cm-addition)
-      (if action (substring text 3 -3)
+      (if action (substring text 2 -2)
         ""))
      ((eq type 'cm-deletion)
-      (if action "" (substring text 3 -3)))
+      (if action "" (substring text 2 -2)))
      ((eq type 'cm-substitution)
       (string-match "{~~\\(.*?\\)~>\\(.*?\\)~~}" text)
       (match-string (if action 2 1) text))
