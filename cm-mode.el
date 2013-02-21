@@ -165,9 +165,20 @@
   "*Face for CriticMarkup highlights."
   :group 'criticmarkup)
 
-(defface ebib-crossref-face '((t (:foreground "red")))
-  "*Face used to indicate values inherited from crossreferenced entries."
-  :group 'ebib-faces)
+(defvar cm-addition-face 'cm-addition-face
+  "CriticMarkup addition face.")
+
+(defvar cm-deletion-face 'cm-deletion-face
+  "CriticMarkup deletion face.")
+
+(defvar cm-substitution-face 'cm-substitution-face
+  "CriticMarkup substitution face.")
+
+(defvar cm-comment-face 'cm-comment-face
+  "CriticMarkup comment face.")
+
+(defvar cm-highlight-face 'cm-highlight-face
+  "CriticMarkup highlight face.")
 
 (defvar cm-mode-map
   (let ((map (make-sparse-keymap)))
@@ -186,18 +197,18 @@
   :init-value nil :lighter " cm" :global nil
   (cond
    (cm-mode                             ; cm-mode is turned on
-    (font-lock-add-keywords nil `((,cm-addition-regexp . 'cm-addition-face)
-                                  (,cm-deletion-regexp . 'cm-deletion-face)
-                                  (,cm-substitution-regexp . 'cm-substitution-face)
-                                  (,cm-comment-regexp . 'cm-comment-face)
+    (font-lock-add-keywords nil `((,cm-addition-regexp . cm-addition-face)
+                                  (,cm-deletion-regexp . cm-deletion-face)
+                                  (,cm-substitution-regexp . cm-substitution-face)
+                                  (,cm-comment-regexp . cm-comment-face)
                                   (,cm-highlight-regexp . cm-highlight-face)) t)
     (setq cm-current-markup-overlay (make-overlay 1 1))
     (overlay-put cm-current-markup-overlay 'face 'highlight))
    ((not cm-mode)                       ; cm-mode is turned off
-    (font-lock-remove-keywords nil `((,cm-addition-regexp . 'cm-addition-face)
-                                     (,cm-deletion-regexp . 'cm-deletion-face)
-                                     (,cm-substitution-regexp . 'cm-substitution-face)
-                                     (,cm-comment-regexp . 'cm-comment-face)
+    (font-lock-remove-keywords nil `((,cm-addition-regexp . cm-addition-face)
+                                     (,cm-deletion-regexp . cm-deletion-face)
+                                     (,cm-substitution-regexp . cm-substitution-face)
+                                     (,cm-comment-regexp . cm-comment-face)
                                      (,cm-highlight-regexp . cm-highlight-face)))
     (remove-overlays))))
 
