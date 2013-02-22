@@ -35,27 +35,26 @@
 
 ;; CriticMarkup for Emacs
 ;; ======================
-;;
-;; cm-mode is a minor mode that provides (rudimentary) support for
-;; CriticMarkup in Emacs.
-;;
+;; 
+;; cm-mode is a minor mode that provides support for CriticMarkup in Emacs.
+;; 
 ;; CriticMarkup defines the following patterns for marking changes to a
 ;; text:
-;;
+;; 
 ;; -   Addition {++ ++}
 ;; -   Deletion {-- --}
 ;; -   Substitution {~~ ~> ~~}
 ;; -   Comment {>> <<}
 ;; -   Highlight {{ }}{>> <<}
-;;
+;; 
 ;; Activating cm-mode provides key bindings to insert the markup above and
 ;; thus mark one's changes to the text. The provided key bindings are:
-;;
+;; 
 ;; -   C-c * a: add text
 ;; -   C-c * d: delete text
 ;; -   C-c * s: substitute text
 ;; -   C-c * c: insert a comment (possibly with highlight)
-;;
+;; 
 ;; The commands to delete or substitute text operate on the region. The
 ;; command to insert a comment can be used with an active region, in which
 ;; case the text in the region will be highlighted. It can also be used
@@ -63,54 +62,71 @@
 ;; else, it just adds a lone comment. The commands for inserting and
 ;; substituting text and for inserting a comment all put the cursor at the
 ;; correct position, so you can start typing right away.
-;;
+;; 
+;; Follow changes mode
+;; -------------------
+;; 
+;; cm-mode also provides a (rudimentary) 'follow changes' mode. When
+;; activated, changes you make to the buffer are automatically marked as
+;; insertions or deletions. Substitutions cannot be made automatically
+;; (that is, if you mark a word, delete it and then type a replacement, it
+;; will still be marked as sequence of deletion+insertion, not as a
+;; substitution), but they can still be made manually with C-c * s. You can
+;; activate and deactivate follow changes mode with C-c * F. When it's
+;; active, the modeline indicator for cm-mode changes from cm to cm*.
+;; 
+;; Note that this functionality is in development and not very polished
+;; yet. Multiple deletions in sequence, for example, are not combined, so
+;; that deleting a word with <backspace> leaves a string of deletion
+;; markups. Deleting a character with <del> also leaves the cursor in the
+;; wrong position. Follow changes mode should also be considered
+;; alpha-grade, i.e., it works to the extent that it works. (If you
+;; experience problems with it, please open up an issue on Github or send
+;; me an email.)
+;; 
 ;; Accepting or rejecting changes
 ;; ------------------------------
-;;
-;; You can interactively accept or reject a change by putting the cursor
+;; 
+;; One can interactively accept or reject a change by putting the cursor
 ;; inside it and hitting C-c * i. For additions, deletions and
 ;; substitutions, you get a choice between a to accept the change or r to
 ;; reject it. There are two other choices, s to skip this change or q to
 ;; quit. Both leave the change untouched and if you're just dealing with
-;; the change at point, they are essentially identical. (They have
-;; different functions when accepting or rejecting all changes
-;; interactively, though.)
-;;
+;; the change at point, they are essentially identical.
+;; 
 ;; For comments and highlights, the choices are different: d to delete the
 ;; comment or highlight (whereby the latter of course retains the
 ;; highlighted text, but the comment and the markup are removed), or k to
 ;; keep the comment or highlight. Again q quits and is essentially
 ;; identical to k. (Note that you can also use s instead of k, in case you
 ;; get used to skipping changes that way.)
-;;
+;; 
 ;; You can interactively accept or reject all changes with C-c * I (that is
 ;; a capital i). This will go through each change asking you whether you
 ;; want to accept, reject or skip it, or delete or keep it. Typing q quits
 ;; the accept/reject session.
-;;
+;; 
 ;; Font lock
 ;; ---------
-;;
+;; 
 ;; cm-mode also adds the markup patterns defined by CriticMarkup to
 ;; font-lock-keywords and provides customisable faces to highlight them.
 ;; The customisation group is called criticmarkup.
-;;
+;; 
 ;; You may notice that changes that span multiple lines are not
 ;; highlighted. The reason for this is that multiline font lock in Emacs is
 ;; not straightforward. There are ways to deal with this, but since cm-mode
 ;; is a minor mode, it could interfere with the major mode's font locking
 ;; mechanism if it did that.
-;;
+;; 
 ;; To mitigate this problem, you can use soft wrap (with visual-line-mode).
 ;; Since each paragraph is then essentially a single line, font lock works
 ;; even across multiple (visual) lines.
-;;
+;; 
 ;; TODO
 ;; ----
-;;
-;; -   Commands to accept or reject all changes in one go
-;; -   Follow changes mode: automatically insert CriticMarkup when changes
-;; -   are made to the buffer.
+;; 
+;; -   Commands to accept or reject all changes in one go.
 ;; -   Mouse support?
 
 ;;; Code:
@@ -123,6 +139,19 @@
                         (cm-comment "{>>" "<<}")
                         (cm-highlight "{{" "}}"))
   "CriticMarkup Delimiters.")
+
+(defvar cm-follow-changes nil
+  "Flag indicating whether follow changes mode is active.")
+
+(defvar cm-change-text nil
+  "Deleted text in follow changes mode.")
+
+(defvar cm-change-no-record nil
+  "Flag indicating whether to actually record a change.
+In follow changes mode, some operations that change the buffer
+must not be recorded with markup. Such functions can set this
+flag to indicate this. (Though they should actually use the macro
+`cm-without-following-changes'.)")
 
 (defvar cm-addition-regexp "\\(?:{\\+\\+.*?\\+\\+}\\)"
   "CriticMarkup addition regexp.")
@@ -188,13 +217,14 @@
     (define-key map "\C-c*c" 'cm-comment)
     (define-key map "\C-c*i" 'cm-accept/reject-change-at-point)
     (define-key map "\C-c*I" 'cm-accept/reject-all-changes)
+    (define-key map "\C-c*F" 'cm-follow-changes)
     map)
   "Keymap for cm-mode.")
 
 ;;;###autoload
 (define-minor-mode cm-mode
   "Minor mode for CriticMarkup."
-  :init-value nil :lighter " cm" :global nil
+  :init-value nil :lighter (:eval (concat " cm" cm-follow-changes)) :global nil
   (cond
    (cm-mode                             ; cm-mode is turned on
     (font-lock-add-keywords nil `((,cm-addition-regexp . cm-addition-face)
@@ -212,6 +242,57 @@
                                      (,cm-highlight-regexp . cm-highlight-face)))
     (remove-overlays))))
 
+(defun cm-follow-changes ()
+  "Record changes."
+  (interactive)
+  (if cm-follow-changes
+      (progn
+        (setq before-change-functions (delq 'cm-before-change before-change-functions))
+        (setq after-change-functions (delq 'cm-after-change after-change-functions))
+        (ad-deactivate 'undo)
+        (setq cm-follow-changes nil)
+        (message "Follow changes mode deactivated."))
+    (add-to-list 'before-change-functions 'cm-before-change t)
+    (add-to-list 'after-change-functions 'cm-after-change)
+    (ad-activate 'undo t)
+    (setq cm-follow-changes "*")
+    (message "Follow changes mode activated.")))
+
+(defun cm-before-change (beg end)
+  "Function to execute before a buffer change.
+In the case of an addition, this function adds the relevant
+markup. For a deletion, the deleted text is stored so that
+cm-after-change can insert it again."
+  (unless (or cm-change-no-record ; do not record this change
+              (and (= beg (point-min)) (= end (point-max))) ; this happens on buffer switches
+              (cm-markup-at-point)) ; if we're already inside a change, don't do anything special
+    (if (not (= beg end)) ; deletion
+        (setq cm-change-text (buffer-substring beg end))
+      (insert "{++++}")
+      (forward-char -3))))
+
+(defun cm-after-change (beg end length)
+  "Function to execute after a buffer change.
+This function marks deletions. See cm-before-change for
+details."
+  (unless (or cm-change-no-record
+              (not cm-change-text))
+    (save-excursion
+      (goto-char beg)
+      (insert (concat "{--" cm-change-text "--}"))
+      (setq cm-change-text nil))))
+
+(defmacro cm-without-following-changes (&rest body)
+  "Execute BODY without following changes."
+  (declare (indent defun))
+  `(let ((cm-change-no-record t))
+     ,@body))
+
+(defadvice undo (around cm-no-follow (&optional arg))
+  "Temporarily remove cm-record-change from before-change-functions."
+  (cm-without-following-changes
+    ad-do-it))
+
 ;;;###autoload
 (defun turn-on-cm ()
   "Unconditionally turn on cm-mode."
@@ -228,43 +309,47 @@
   (interactive)
   (when (cm-markup-at-point)
     (error "Already inside a change"))
-  (insert "{++++}")
-  (backward-char 3))
+  (cm-without-following-changes
+    (insert "{++++}")
+    (backward-char 3)))
 
 (defun cm-deletion (beg end)
   "Mark text for deletion."
   (interactive "r")
   (when (cm-markup-at-point)
     (error "Already inside a change"))
-  (let ((text (delete-and-extract-region beg end)))
-    (insert (concat "{--" text "--}"))))
+  (cm-without-following-changes
+    (let ((text (delete-and-extract-region beg end)))
+      (insert (concat "{--" text "--}")))))
 
 (defun cm-substitution (beg end)
   "Mark a substitution."
   (interactive "r")
   (when (cm-markup-at-point)
     (error "Already inside a change"))
-  (let ((text (delete-and-extract-region beg end)))
-    (insert (concat "{~~" text "~>~~}"))
-    (backward-char 3)))
+  (cm-without-following-changes
+    (let ((text (delete-and-extract-region beg end)))
+      (insert (concat "{~~" text "~>~~}"))
+      (backward-char 3))))
 
 (defun cm-comment (beg end)
   "Add a comment.
 If the region is active, the text in the region is highlighted.
 If point is in an existing change, the comment is added after it."
   (interactive "r")
-  (let ((change (cm-markup-at-point))
-        text)
-    (cond
-     (change
-      (deactivate-mark) ; we don't want the region active
-      (cm-forward-markup (car change)))
-     ;; note: we do not account for the possibility that the region
-     ;; contains a change but point is outside of it...
-     ((use-region-p)
-      (setq text (delete-and-extract-region beg end))))
-    (insert (if text (concat "{{" text "}}") "") "{>><<}")
-    (backward-char 3)))
+  (cm-without-following-changes
+    (let ((change (cm-markup-at-point))
+          text)
+      (cond
+       (change
+        (deactivate-mark)               ; we don't want the region active
+        (cm-forward-markup (car change)))
+       ;; note: we do not account for the possibility that the region
+       ;; contains a change but point is outside of it...
+       ((use-region-p)
+        (setq text (delete-and-extract-region beg end))))
+      (insert (if text (concat "{{" text "}}") "") "{>><<}")
+      (backward-char 3))))
   
 (defun cm-forward-markup (type &optional n)
   "Move forward N markups of TYPE.

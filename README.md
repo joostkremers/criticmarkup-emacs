@@ -1,7 +1,6 @@
 # CriticMarkup for Emacs #
 
-`cm-mode` is a minor mode that provides (rudimentary) support for
-[CriticMarkup](http://criticmarkup.com/) in Emacs.
+`cm-mode` is a minor mode that provides support for [CriticMarkup](http://criticmarkup.com/) in Emacs.
 
 CriticMarkup defines the following patterns for marking changes to a text:
 
@@ -21,9 +20,16 @@ Activating `cm-mode` provides key{--s--} {++bindings ++}to insert the {~~pattern
 The commands to delete or substitute text operate on the region. The command to insert a comment can be used with an active region, in which case the text in the region will be highlighted. It can also be used inside an existing markup to add a comment to it. If it is used anywhere else, it just adds a lone comment. The commands for inserting and substituting text and for inserting a comment all put the cursor at the correct position, so you can start typing right away. 
 
 
+## Follow changes mode ##
+
+`cm-mode` also provides a (rudimentary) 'follow changes' mode. When activated, changes you make to the buffer are automatically marked as insertions or deletions. Substitutions cannot be made automatically (that is, if you mark a word, delete it and then type a replacement, it will still be marked as sequence of deletion+insertion, not as a substitution),   but they can still be made manually with `C-c * s`. You can activate and deactivate follow changes mode with `C-c * F`. When it's active, the modeline indicator for `cm-mode` changes from `cm` to `cm*`. 
+
+Note that this functionality is in development and not very polished yet. Multiple deletions in sequence, for example, are not combined, so that deleting a word with `<backspace>` leaves a string of deletion markups. Deleting a character with `<del>` also leaves the cursor in the wrong position. Follow changes mode should also be considered alpha-grade, i.e., it works to the extent that it works. (If you experience problems with it, please open up an issue on Github or send me an email.)
+
+
 ## Accepting or rejecting changes ##
 
-You can interactively accept or reject a change by putting the cursor inside it and hitting `C-c * i`. For additions, deletions and substitutions, you get a choice between `a` to accept the change or `r` to reject it. There are two other choices, `s` to skip this change or `q` to quit. Both leave the change untouched and if you're just dealing with the change at point, they are essentially identical. {>>(They have different functions when accepting or rejecting all changes interactively, though.)<<}
+One can interactively accept or reject a change by putting the cursor inside it and hitting `C-c * i`. For additions, deletions and substitutions, you get a choice between `a` to accept the change or `r` to reject it. There are two other choices, `s` to skip this change or `q` to quit. Both leave the change untouched and if you're just dealing with the change at point, they are essentially identical. {>>(They have different functions when accepting or rejecting all changes interactively, though.)<<}
 
 For comments and highlights, the choices are different: `d` to delete the comment or highlight (whereby the latter of course retains the highlighted text, but the comment and the markup are removed), or `k` to keep the comment or highlight. Again `q` quits and is essentially identical to `k`. (Note that you can also use `s` instead of `k`, in case you get used to skipping changes that way.)
 
@@ -42,5 +48,4 @@ To mitigate this problem, you can use soft wrap (with `visual-line-mode`). Since
 ## TODO ##
 
 - Commands to accept or reject all changes in one go. {>>These won't be bound to keys, though.<<}
-- Follow changes mode: automatically insert CriticMarkup when changes are made to the buffer.
 - Mouse support?
