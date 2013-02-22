@@ -378,24 +378,13 @@ If N is negative, move backward."
           (forward-char))
         (re-search-backward (regexp-quote delim) nil t (abs n)))))))
 
-;; Note: cm-{beginning|end}-of-* are for thing-at-point. They move point to
-;; the position *inside* the opening/closing brace. The reason is that
-;; thing-at-point otherwise thinks point is inside a markup if it is
-;; actually immediately outside the brace, i.e., `|{++...' or `...++}|'. As
-;; a result, it would not be possible to add a change right before or after
-;; an existing change, which would be counterintuitive. So don't use
-;; cm-{beginning|end}-of-* to actually move point beyond a markup, use
-;; cm-forward-* for that.
-
 (defun cm-beginning-of-markup (type)
   "Move to the beginning of a markup of TYPE."
-  (cm-forward-markup type -1)
-  (forward-char))
+  (cm-forward-markup type -1))
 
 (defun cm-end-of-markup (type)
   "Move to the end of a markup of TYPE."
-  (cm-forward-markup type 1)
-  (backward-char))
+  (cm-forward-markup type 1))
 
 (defun cm-forward-addition (&optional n)
   "Move forward N addition markups.
@@ -404,13 +393,11 @@ If N is negative, move backward."
 
 (defun cm-beginning-of-addition ()
   "Move to the beginning of an addition."
-  (cm-forward-markup 'cm-addition -1)
-  (forward-char))
+  (cm-forward-markup 'cm-addition -1))
 
 (defun cm-end-of-addition ()
   "Move to the end of an addition."
-  (cm-forward-markup 'cm-addition 1)
-  (backward-char))
+  (cm-forward-markup 'cm-addition 1))
 
 (put 'cm-addition 'forward-op 'cm-forward-addition)
 (put 'cm-addition 'beginning-op 'cm-beginning-of-addition)
@@ -423,13 +410,11 @@ If N is negative, move backward."
 
 (defun cm-beginning-of-deletion ()
   "Move to the beginning of an deletion."
-  (cm-forward-markup 'cm-deletion -1)
-  (forward-char))
+  (cm-forward-markup 'cm-deletion -1))
 
 (defun cm-end-of-deletion ()
   "Move to the end of an deletion."
-  (cm-forward-markup 'cm-deletion 1)
-  (backward-char))
+  (cm-forward-markup 'cm-deletion 1))
 
 (put 'cm-deletion 'forward-op 'cm-forward-deletion)
 (put 'cm-deletion 'beginning-op 'cm-beginning-of-deletion)
@@ -442,13 +427,11 @@ If N is negative, move backward."
 
 (defun cm-beginning-of-substitution ()
   "Move to the beginning of an substitution."
-  (cm-forward-markup 'cm-substitution -1)
-  (forward-char))
+  (cm-forward-markup 'cm-substitution -1))
 
 (defun cm-end-of-substitution ()
   "Move to the end of an substitution."
-  (cm-forward-markup 'cm-substitution 1)
-  (backward-char))
+  (cm-forward-markup 'cm-substitution 1))
 
 (put 'cm-substitution 'forward-op 'cm-forward-substitution)
 (put 'cm-substitution 'beginning-op 'cm-beginning-of-substitution)
@@ -461,13 +444,11 @@ If N is negative, move backward."
 
 (defun cm-beginning-of-comment ()
   "Move to the beginning of an comment."
-  (cm-forward-markup 'cm-comment -1)
-  (forward-char))
+  (cm-forward-markup 'cm-comment -1))
 
 (defun cm-end-of-comment ()
   "Move to the end of an comment."
-  (cm-forward-markup 'cm-comment 1)
-  (backward-char))
+  (cm-forward-markup 'cm-comment 1))
 
 (put 'cm-comment 'forward-op 'cm-forward-comment)
 (put 'cm-comment 'beginning-op 'cm-beginning-of-comment)
@@ -596,12 +577,12 @@ substitutions, `d' for comments and highlights."
         (text (delete ?\n (second change)))) ; delete newlines because they mess up string-match below.
     (cond
      ((eq type 'cm-addition)
-      (if action (substring text 2 -2)
+      (if action (substring text 3 -3)
         ""))
      ((eq type 'cm-deletion)
-      (if action "" (substring text 2 -2)))
+      (if action "" (substring text 3 -3)))
      ((eq type 'cm-substitution)
-      (string-match "~~\\(.*?\\)~>\\(.*?\\)~~" text)
+      (string-match "{~~\\(.*?\\)~>\\(.*?\\)~~}" text)
       (match-string (if action 2 1) text))
      ((and (eq type 'cm-comment)
            (eq action ?d))
