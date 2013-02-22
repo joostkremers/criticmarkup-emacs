@@ -516,7 +516,7 @@ substitutions, `d' for comments and highlights."
      ((eq type 'cm-deletion)
       (if action "" (substring text 2 -2)))
      ((eq type 'cm-substitution)
-      (string-match "{~~\\(.*?\\)~>\\(.*?\\)~~}" text)
+      (string-match "~~\\(.*?\\)~>\\(.*?\\)~~" text)
       (match-string (if action 2 1) text))
      ((and (eq type 'cm-comment)
            (eq action ?d))
