@@ -659,8 +659,9 @@ is NIL."
           (throw 'quit nil))                         ; get out
         (cond
          ((memq action '(?a ?r ?d))
-          (delete-region (third change) (fourth change))
-          (insert (cm-substitution-string change action))
+          (cm-without-following-changes
+            (delete-region (third change) (fourth change))
+            (insert (cm-substitution-string change action)))
           (point))
          ((memq action '(?s ?k))
           (fourth change)))))))
