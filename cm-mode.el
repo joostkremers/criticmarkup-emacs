@@ -143,8 +143,8 @@
 (defvar cm-follow-changes nil
   "Flag indicating whether follow changes mode is active.")
 
-(defvar cm-change-text nil
-  "Deleted text in follow changes mode.")
+(defvar cm-current-change nil
+  "Details about the deleted text in follow changes mode.")
 
 (defvar cm-change-no-record nil
   "Flag indicating whether to actually record a change.
@@ -259,28 +259,23 @@ flag to indicate this. (Though they should actually use the macro
     (message "Follow changes mode activated.")))
 
 (defun cm-before-change (beg end)
-  "Function to execute before a buffer change.
-In the case of an addition, this function adds the relevant
-markup. For a deletion, the deleted text is stored so that
-cm-after-change can insert it again."
-  (unless (or cm-change-no-record ; do not record this change
-              (and (= beg (point-min)) (= end (point-max))) ; this happens on buffer switches
-              (cm-markup-at-point)) ; if we're already inside a change, don't do anything special
-    (if (not (= beg end)) ; deletion
-        (setq cm-change-text (buffer-substring beg end))
-      (insert "{++++}")
-      (forward-char -3))))
+  "Function to execute before a buffer change."
+  (unless (or cm-change-no-record       ; do not record this change
+              (and (= beg (point-min)) (= end (point-max)))) ; this happens on buffer switches
+    ;; (message "Point: %s; beg: %s; end: %s" (point) beg end)
+    (let ((change (cm-markup-at-point)))
+      (if (= beg end)                   ; addition
+          (cm-make-addition change)
+        (setq cm-current-change (list (buffer-substring beg end) change))))))
 
 (defun cm-after-change (beg end length)
   "Function to execute after a buffer change.
 This function marks deletions. See cm-before-change for
 details."
   (unless (or cm-change-no-record
-              (not cm-change-text))
-    (save-excursion
-      (goto-char beg)
-      (insert (concat "{--" cm-change-text "--}"))
-      (setq cm-change-text nil))))
+              (not cm-current-change))
+    (apply 'cm-make-deletion cm-current-change)
+    (setq cm-current-change nil)))
 
 (defmacro cm-without-following-changes (&rest body)
   "Execute BODY without following changes."
@@ -304,32 +299,72 @@ details."
   (interactive)
   (cm-mode -1))
 
+;; Making an addition is fairly simple: we just need to add markup if point
+;; isn't already at an addition markup, and then position point
+;; appropriately. The user can then type new text. A deletion is more
+;; difficult, because it also needs to (re)insert the deleted text and do
+;; something sensible with point. This is especially difficult in follow
+;; changes mode, because the deletion may be made with DEL or BACKSPACE.
+
 (defun cm-addition ()
-  "Make an addition."
+  "Make an addition at point.
+If point is at an addition markup already, the new addition is
+combined with it. If point is inside any other markup, no
+addition can be made."
   (interactive)
-  (when (cm-markup-at-point)
-    (error "Already inside a change"))
-  (cm-without-following-changes
-    (insert "{++++}")
-    (backward-char 3)))
+  (let ((change (cm-markup-at-point)))
+    (if (or (not (cm-point-inside-change-p change))
+            (eq (car change) 'cm-addition))
+        (cm-without-following-changes
+          (cm-make-addition change))
+      (error "Cannot make an addition here"))))
 
 (defun cm-deletion (beg end)
   "Mark text for deletion."
   (interactive "r")
-  (when (cm-markup-at-point)
-    (error "Already inside a change"))
-  (cm-without-following-changes
-    (let ((text (delete-and-extract-region beg end)))
-      (insert (concat "{--" text "--}")))))
+  (let ((change (cm-markup-at-point)))
+    (when (cm-point-inside-change-p change)
+      (error "Cannot make a deletion here")) ; TODO we should check whether the region contains markup.
+    (when (use-region-p)
+      (cm-without-following-changes
+        (cm-make-deletion (delete-and-extract-region beg end) change)))))
+
+(defun cm-make-addition (change)
+  "Position point for an addition and insert addition markup if necessary.
+CHANGE is the change markup at point, if any, as returned by
+cm-markup-at-point. If this is an addition, the new addition is
+combined with it, even if point is right outside it. (That avoids
+having two additions adjacent to each other.) If it is another
+kind of markup, and point is inside the curly braces, we make
+sure point is not in the delimiter before adding text."
+  (if (or (eq (car change) 'cm-addition)
+          (cm-point-inside-change-p change))
+      (cm-move-into-markup (car change))
+    (insert "{++++}")
+    (backward-char 3)))
+
+(defun cm-make-deletion (text change)
+  "Insert deletion markup.
+TEXT is the text that's being deleted, CHANGE the change at
+point, if any."
+  ;; TODO: we should check whether the text to be deleted contains part of
+  ;; a change.
+  (unless (cm-point-inside-change-p change (length text))
+    (if (not (or change
+                 (eq (car change) 'cm-deletion)))
+        (insert (concat "{--" text "--}"))
+      (save-excursion
+        (cm-move-into-markup 'cm-deletion)
+        (insert text)))))
 
 (defun cm-substitution (beg end)
   "Mark a substitution."
   (interactive "r")
-  (when (cm-markup-at-point)
-    (error "Already inside a change"))
+  (when (cm-point-inside-change-p (cm-markup-at-point))
+    (error "Cannot make a substitution here")) ; TODO we should check whether the region contains markup.
   (cm-without-following-changes
     (let ((text (delete-and-extract-region beg end)))
-      (insert (concat "{~~" text "~>~~}"))
+      (insert (concat "{~~"  text "~>~~}"))
       (backward-char 3))))
 
 (defun cm-comment (beg end)
@@ -343,48 +378,85 @@ If point is in an existing change, the comment is added after it."
       (cond
        (change
         (deactivate-mark)               ; we don't want the region active
-        (cm-forward-markup (car change)))
+        (cm-end-of-markup (car change)))
        ;; note: we do not account for the possibility that the region
        ;; contains a change but point is outside of it...
        ((use-region-p)
         (setq text (delete-and-extract-region beg end))))
       (insert (if text (concat "{{" text "}}") "") "{>><<}")
       (backward-char 3))))
-  
+
+(defun cm-point-at-delim (delim &optional end strict)
+  "Return non-NIL if point is at a delimiter.
+If DELIM is an end delimiter, optional argument END must be T. 
+
+Point counts as being at delim if it is in a delimiter or
+directly outside, but not when it is directly inside. So `|{++',
+`{|++', `{+|+', return 0, 1, and 2 respectively, while `{++|'
+returns NIL. Similarly, `++}|', `++|}', `+|+}' return 0, 1, and
+2, while `|++}' returns NIL.
+
+If STRICT is non-NIL, point must be inside the delimiter. That
+is, instead of 0, the return value will be NIL."
+  (save-excursion
+    (if end
+        (let ((distance (skip-chars-forward (substring delim 1) (+ (point) 2))))
+          (if (looking-back (regexp-quote delim))
+              (if (> distance 0)
+                  distance
+                (and (not strict) 0))))
+      (let ((distance (skip-chars-backward (substring delim 0 -1) (- (point) 2))))
+        (if (looking-at (regexp-quote delim))
+            (if (< distance 0)
+                (abs distance)
+              (and (not strict) 0)))))))
+
 (defun cm-forward-markup (type &optional n)
   "Move forward N markups of TYPE.
-If N is negative, move backward."
-  (if (eq type 'cm-highlight) ; highlights have a delimiter of two characters
-      (cm-forward-highlight n) ; therefore they have their own forward function
-    (or n (setq n 1))
-    ;; note that the delimiters are all three characters long. we must
-    ;; therefore allow for the possibility that point is *within* a
-    ;; delimiter. in the exx below, point is indicated with `|'.
-    (cond
-     ((> n 0) ; moving forward
-      (let ((delim (third (assq type cm-delimiters))))
-        ;; if point is inside the delimiter `+|+}':
-        (when (looking-at (regexp-quote (substring delim -2)))
-          (backward-char))
-        (re-search-forward (regexp-quote delim) nil t n)))
-     (t ; moving backward
-      (let ((delim (second (assq type cm-delimiters))))
-        ;; if point is inside the delimiter `{|++':
-        (when (and (looking-back (regexp-quote (substring delim 0 1)) (1- (point)))
-                   (looking-at (regexp-quote (substring delim 1))))
-          (forward-char 2))
-        ;; if point is inside the delimiter `{+|+':
-        (when (looking-back (regexp-quote (substring delim 0 2)) (- (point) 2)) 
-          (forward-char))
-        (re-search-backward (regexp-quote delim) nil t (abs n)))))))
+If N is negative, move backward. If point is inside a delimiter,
+this function moves point to the previous/next markup. If it's
+inside a markup, it moves it to the edge. If point is at the edge
+of a markup, it moves to the end of the next markup of the same
+type."
+  (or n (setq n 1))
+  (cond
+   ((> n 0)                             ; moving forward
+    (let ((delim (third (assq type cm-delimiters))))
+      (backward-char (- 3 (or (cm-point-at-delim delim t t) 3))) ; adjust point if it's inside a delim
+      (re-search-forward (regexp-quote delim) nil t n)))
+   (t                                   ; moving backward
+    (let ((delim (second (assq type cm-delimiters))))
+      (forward-char (- 3 (or (cm-point-at-delim delim nil t) 3))) ; adjust point if it's inside a delim
+      (re-search-backward (regexp-quote delim) nil t (abs n))))))
 
 (defun cm-beginning-of-markup (type)
   "Move to the beginning of a markup of TYPE."
+  ;; first move out of the delimiter, if we're in one.
+  (cm-move-past-delim (second (assq type cm-delimiters)))
   (cm-forward-markup type -1))
 
 (defun cm-end-of-markup (type)
   "Move to the end of a markup of TYPE."
-  (cm-forward-markup type 1))
+  ;; first move out of the delimiter, if we're in one.
+  (cm-move-past-delim (third (assq type cm-delimiters)) t)
+  (cm-forward-markup type))
+
+(defun cm-move-past-delim (delim &optional end)
+  "Move point past DELIM into the markup.
+If DELIM is an end delimiter, END must be T. If point is not at a
+delimiter, do not move."
+  (if end
+      (backward-char (- 3 (or (cm-point-at-delim delim end)
+                              3)))
+    (forward-char (- 3 (or (cm-point-at-delim delim)
+                           3)))))
+
+(defun cm-move-into-markup (type)
+  "Make sure point is inside the delimiters of TYPE."
+  ;; we simply call cm-move-past-delim twice, since it's harmless if we're
+  ;; not on the right delimiter.
+  (cm-move-past-delim (second (assq type cm-delimiters)))
+  (cm-move-past-delim (third (assq type cm-delimiters)) t))
 
 (defun cm-forward-addition (&optional n)
   "Move forward N addition markups.
@@ -457,23 +529,25 @@ If N is negative, move backward."
 (defun cm-forward-highlight (&optional n)
   "Move forward N highlight markups.
 If N is negative, move backward."
-  (or n (setq n 1))
-  (cond
-   ((> n 0)
-    (re-search-forward "}}" nil t n))
-   (t
-    (when (and (looking-back "{" (1- (point)))
-               (looking-at "{"))
-      (forward-char))
-    (re-search-backward "{{" nil t (abs n)))))
+  (cm-forward-markup 'cm-highlight n))
+
+  ;; (or n (setq n 1))
+  ;; (cond
+  ;;  ((> n 0)
+  ;;   (re-search-forward "}}" nil t n))
+  ;;  (t
+  ;;   (when (and (looking-back "{" (1- (point)))
+  ;;              (looking-at "{"))
+  ;;     (forward-char))
+  ;;   (re-search-backward "{{" nil t (abs n)))))
 
 (defun cm-beginning-of-highlight ()
   "Move to the beginning of an highlight."
-  (cm-forward-highlight -1))
+  (cm-forward-markup 'cm-highlight -1))
 
 (defun cm-end-of-highlight ()
   "Move to the end of an highlight."
-  (cm-forward-highlight 1))
+  (cm-forward-markup 'cm-highlight 1))
 
 (put 'cm-highlight 'forward-op 'cm-forward-highlight)
 (put 'cm-highlight 'beginning-op 'cm-beginning-of-highlight)
@@ -496,18 +570,36 @@ is not included."
             (end (save-excursion
                    (cm-end-of-markup type)
                    (point))))
-        (list (1- beg) (1+ end))))) ; adjust (see comment at cm-beginning-of-markup)
+        (list beg end))))
 
 (defun cm-markup-at-point ()
   "Find the markup at point.
 Return a list of the form (TYPE TEXT START-POS END-POS), or NIL
-if point is not inside a markup."
+if point is not at a markup."
+  ;; if point is in between two markups, the one that is first in
+  ;; cm-delimiters will be returned, regardless whether it's before or
+  ;; after point. this is not very pretty, but it does no harm, so no need
+  ;; to change it.
   (let ((type (catch 'found
                 (dolist (type (mapcar #'car cm-delimiters))
                   (when (thing-at-point type)
                     (throw 'found type))))))
     (when type
       (append (list type) (list (thing-at-point type)) (cm-bounds-of-markup-at-point type)))))
+
+(defun cm-point-inside-change-p (change &optional correction)
+  "Return T if point is inside CHANGE.
+CHANGE is a change as returned by `cm-markup-at-point'. Point is
+within a change if it's inside the curly braces, not directly
+outside of them. The latter counts as being AT a change.
+
+If non-NIL, CORRECTION is added to the value of point; this is
+useful if `cm-point-inside-change-p' is used after a deletion but
+with a change that follows that deletion but was extracted before
+it."
+  (and change ; if there *is* no change, we're not inside one...
+       (not (or (= (+ (or correction 0) (point)) (third change))
+                (= (+ (or correction 0) (point)) (fourth change))))))
 
 (defun cm-expand-change (change)
   "Expand CHANGE with a following comment or, if a comment, with a preceding change.
@@ -519,20 +611,19 @@ is of any other type, check if there's a commend and include it."
     (save-excursion
       (cm-beginning-of-comment)
       (skip-chars-backward "[:space:]") ; allow for any whitespace between change and comment
-      (backward-char 3) ; adjust point
+      (backward-char 3)                 ; adjust point
       (let ((preceding (cm-markup-at-point)))
         (if preceding
             (list (car preceding) (concat (second preceding) (second change)) (third preceding) (fourth change))
           change))))
-   (t
-    (save-excursion
-      (cm-end-of-markup (car change))
-      (skip-chars-forward "[:space:]") ; allow for any whitespace between change and comment
-      (forward-char 3) ; adjust point
-      (let ((comment (cm-markup-at-point)))
-        (if (eq (car comment) 'cm-comment)
-            (list 'cm-highlight (concat (second change) (second comment)) (third change) (fourth comment))
-          change))))))
+   (t (save-excursion
+        (cm-end-of-markup (car change))
+        (skip-chars-forward "[:space:]") ; allow for any whitespace between change and comment
+        (forward-char 3)                 ; adjust point
+        (let ((comment (cm-markup-at-point)))
+          (if (eq (car comment) 'cm-comment)
+              (list (car change) (concat (second change) (second comment)) (third change) (fourth comment))
+            change))))))
 
 (defun cm-accept/reject-change-at-point (&optional interactive)
   "Accept or reject change at point interactively.
@@ -577,10 +668,15 @@ substitutions, `d' for comments and highlights."
         (text (delete ?\n (second change)))) ; delete newlines because they mess up string-match below.
     (cond
      ((eq type 'cm-addition)
-      (if action (substring text 3 -3)
-        ""))
+      (if (not action)
+          ""
+        (string-match "{\\+\\+\\(.*?\\)\\+\\+}" text)
+        (match-string 1 text)))
      ((eq type 'cm-deletion)
-      (if action "" (substring text 3 -3)))
+      (if action
+          ""
+        (string-match "{--\\(.*?\\)--}" text)
+        (match-string 1 text)))
      ((eq type 'cm-substitution)
       (string-match "{~~\\(.*?\\)~>\\(.*?\\)~~}" text)
       (match-string (if action 2 1) text))
