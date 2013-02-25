@@ -143,8 +143,11 @@
 (defvar cm-follow-changes nil
   "Flag indicating whether follow changes mode is active.")
 
-(defvar cm-current-change nil
-  "Details about the deleted text in follow changes mode.")
+(defvar cm-current-deletion nil
+  "The deleted text in follow changes mode.
+The value is actually a list consisting of the text and a flag
+indicating whether the deletion was done with the backspace
+key.")
 
 (defvar cm-change-no-record nil
   "Flag indicating whether to actually record a change.
@@ -263,19 +266,19 @@ flag to indicate this. (Though they should actually use the macro
   (unless (or cm-change-no-record       ; do not record this change
               (and (= beg (point-min)) (= end (point-max)))) ; this happens on buffer switches
     ;; (message "Point: %s; beg: %s; end: %s" (point) beg end)
-    (let ((change (cm-markup-at-point)))
-      (if (= beg end)                   ; addition
-          (cm-make-addition change)
-        (setq cm-current-change (list (buffer-substring beg end) change))))))
+    (if (= beg end)                   ; addition
+        (cm-make-addition (cm-markup-at-point))
+      ;; when the deletion was done with backspace, point is at end.
+      (setq cm-current-deletion (list (buffer-substring beg end) (= (point) end))))))
 
 (defun cm-after-change (beg end length)
   "Function to execute after a buffer change.
 This function marks deletions. See cm-before-change for
 details."
   (unless (or cm-change-no-record
-              (not cm-current-change))
-    (apply 'cm-make-deletion cm-current-change)
-    (setq cm-current-change nil)))
+              (not cm-current-deletion))
+    (apply 'cm-make-deletion cm-current-deletion)
+    (setq cm-current-deletion nil)))
 
 (defmacro cm-without-following-changes (&rest body)
   "Execute BODY without following changes."
@@ -327,7 +330,7 @@ addition can be made."
       (error "Cannot make a deletion here")) ; TODO we should check whether the region contains markup.
     (when (use-region-p)
       (cm-without-following-changes
-        (cm-make-deletion (delete-and-extract-region beg end) change)))))
+        (cm-make-deletion (delete-and-extract-region beg end))))))
 
 (defun cm-make-addition (change)
   "Position point for an addition and insert addition markup if necessary.
@@ -343,19 +346,26 @@ sure point is not in the delimiter before adding text."
     (insert "{++++}")
     (backward-char 3)))
 
-(defun cm-make-deletion (text change)
-  "Insert deletion markup.
+(defun cm-make-deletion (text &optional backspace)
+  "Reinsert TEXT into the buffer and add deletion markup if necessary.
 TEXT is the text that's being deleted, CHANGE the change at
-point, if any."
+point, if any.
+
+If BACKSPACE is T, the deletion was done with the backspace key;
+point will then be left before the deletion markup."
   ;; TODO: we should check whether the text to be deleted contains part of
   ;; a change.
-  (unless (cm-point-inside-change-p change (length text))
-    (if (not (or change
-                 (eq (car change) 'cm-deletion)))
-        (insert (concat "{--" text "--}"))
+  (let ((change (cm-markup-at-point)))
+    (unless (cm-point-inside-change-p change)
       (save-excursion
-        (cm-move-into-markup 'cm-deletion)
-        (insert text)))))
+        (if (not (or change
+                     (eq (car change) 'cm-deletion)))
+            (insert (concat "{--" text "--}"))
+          (cm-move-into-markup 'cm-deletion)
+          (insert text)))
+      ;; the save-excursion leaves point at the start of the deletion markup
+      (unless backspace
+        (cm-end-of-markup 'cm-deletion)))))
 
 (defun cm-substitution (beg end)
   "Mark a substitution."
