@@ -285,7 +285,7 @@ details."
      ,@body))
 
 (defadvice undo (around cm-no-follow (&optional arg))
-  "Temporarily remove cm-record-change from before-change-functions."
+  "Do not record changes with CriticMarkup."
   (cm-without-following-changes
     ad-do-it))
 
