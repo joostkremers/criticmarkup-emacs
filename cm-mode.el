@@ -227,7 +227,7 @@ flag to indicate this. (Though they should actually use the macro
 ;;;###autoload
 (define-minor-mode cm-mode
   "Minor mode for CriticMarkup."
-  :init-value nil :lighter (:eval (concat " cm" cm-follow-changes)) :global nil
+  :init-value nil :lighter (:eval (concat " cm" (if cm-follow-changes "*"))) :global nil
   (cond
    (cm-mode                             ; cm-mode is turned on
     (font-lock-add-keywords nil `((,cm-addition-regexp . cm-addition-face)
@@ -245,21 +245,24 @@ flag to indicate this. (Though they should actually use the macro
                                      (,cm-highlight-regexp . cm-highlight-face)))
     (remove-overlays))))
 
-(defun cm-follow-changes ()
+(defun cm-follow-changes (&optional arg)
   "Record changes."
-  (interactive)
-  (if cm-follow-changes
-      (progn
-        (setq before-change-functions (delq 'cm-before-change before-change-functions))
-        (setq after-change-functions (delq 'cm-after-change after-change-functions))
-        (ad-deactivate 'undo)
-        (setq cm-follow-changes nil)
-        (message "Follow changes mode deactivated."))
-    (add-to-list 'before-change-functions 'cm-before-change t)
-    (add-to-list 'after-change-functions 'cm-after-change)
-    (ad-activate 'undo t)
-    (setq cm-follow-changes "*")
-    (message "Follow changes mode activated.")))
+  (interactive (list (or current-prefix-arg 'toggle)))
+  (let ((enable (if (eq arg 'toggle)
+                    (not cm-follow-changes)
+                  (> (prefix-numeric-value arg) 0))))
+    (if enable
+        (progn
+              (add-to-list 'before-change-functions 'cm-before-change t)
+              (add-to-list 'after-change-functions 'cm-after-change)
+              (ad-activate 'undo t)
+              (setq cm-follow-changes t)
+              (message "Follow changes mode activated."))
+      (setq before-change-functions (delq 'cm-before-change before-change-functions))
+      (setq after-change-functions (delq 'cm-after-change after-change-functions))
+      (ad-deactivate 'undo)
+      (setq cm-follow-changes nil)
+      (message "Follow changes mode deactivated."))))
 
 (defun cm-before-change (beg end)
   "Function to execute before a buffer change."
