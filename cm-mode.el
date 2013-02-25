@@ -289,17 +289,6 @@ details."
   (cm-without-following-changes
     ad-do-it))
 
-;;;###autoload
-(defun turn-on-cm ()
-  "Unconditionally turn on cm-mode."
-  (interactive)
-  (cm-mode 1))
-
-(defun turn-off-cm ()
-  "Unconditionally turn off cm-mode"
-  (interactive)
-  (cm-mode -1))
-
 ;; Making an addition is fairly simple: we just need to add markup if point
 ;; isn't already at an addition markup, and then position point
 ;; appropriately. The user can then type new text. A deletion is more
