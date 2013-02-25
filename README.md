@@ -27,7 +27,6 @@ The commands to delete or substitute text operate on the region. The command to 
 Follow changes mode should be considered experimental, so try at your own risk. If you run into problems, open an issue on Github or send me an email.
 
 
-
 ## Accepting or rejecting changes ##
 
 One can interactively accept or reject a change by putting the cursor inside it and hitting `C-c * i`. For additions, deletions and substitutions, you get a choice between `a` to accept the change or `r` to reject it. There are two other choices, `s` to skip this change or `q` to quit. Both leave the change untouched and if you're just dealing with the change at point, they are essentially identical. {>>They have different functions when accepting or rejecting all changes interactively, though.<<}

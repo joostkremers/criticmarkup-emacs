@@ -66,23 +66,18 @@
 ;; Follow changes mode
 ;; -------------------
 ;; 
-;; cm-mode also provides a (rudimentary) 'follow changes' mode. When
-;; activated, changes you make to the buffer are automatically marked as
-;; insertions or deletions. Substitutions cannot be made automatically
-;; (that is, if you mark a word, delete it and then type a replacement, it
-;; will still be marked as sequence of deletion+insertion, not as a
-;; substitution), but they can still be made manually with C-c * s. You can
-;; activate and deactivate follow changes mode with C-c * F. When it's
-;; active, the modeline indicator for cm-mode changes from cm to cm*.
+;; cm-mode also provides a simple 'follow changes' mode. When activated,
+;; changes you make to the buffer are automatically marked as insertions or
+;; deletions. Substitutions cannot be made automatically (that is, if you
+;; mark a word, delete it and then type a replacement, it will still be
+;; marked as sequence of deletion+insertion, not as a substitution), but
+;; they can still be made manually with C-c * s. You can activate and
+;; deactivate follow changes mode with C-c * F. When it's active, the
+;; modeline indicator for cm-mode changes from cm to cm*.
 ;; 
-;; Note that this functionality is in development and not very polished
-;; yet. Multiple deletions in sequence, for example, are not combined, so
-;; that deleting a word with <backspace> leaves a string of deletion
-;; markups. Deleting a character with <del> also leaves the cursor in the
-;; wrong position. Follow changes mode should also be considered
-;; alpha-grade, i.e., it works to the extent that it works. (If you
-;; experience problems with it, please open up an issue on Github or send
-;; me an email.)
+;; Follow changes mode should be considered experimental, so try at your
+;; own risk. If you run into problems, open an issue on Github or send me
+;; an email.
 ;; 
 ;; Accepting or rejecting changes
 ;; ------------------------------
