@@ -27,6 +27,13 @@ The commands to delete or substitute text operate on the region. The command to 
 Follow changes mode should be considered experimental, so try at your own risk. If you run into problems, open an issue on Github or send me an email.
 
 
+## Automaticaly adding comments ##
+
+If you set the variable `cm-auto-comment` to a string, this string is automatically added to every change as a comment. If you explicitly make a comment with `C-c * c`, this string is inserted at the beginning of the comment followed by a colon and a space. You can use this, for example, to keep track of who makes a certain change.
+
+The variable `cm-auto-comment` can be set globally through Customize (or with `setq-default`), or buffer-locally. The latter can be done interactively, with `C-c * C`, or by using a file-local variable.
+
+
 ## Accepting or rejecting changes ##
 
 One can interactively accept or reject a change by putting the cursor inside it and hitting `C-c * i`. For additions, deletions and substitutions, you get a choice between `a` to accept the change or `r` to reject it. There are two other choices, `s` to skip this change or `q` to quit. Both leave the change untouched and if you're just dealing with the change at point, they are essentially identical. {>>They have different functions when accepting or rejecting all changes interactively, though.<<}

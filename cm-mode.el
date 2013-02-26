@@ -35,26 +35,26 @@
 
 ;; CriticMarkup for Emacs
 ;; ======================
-;; 
+;;
 ;; cm-mode is a minor mode that provides support for CriticMarkup in Emacs.
-;; 
+;;
 ;; CriticMarkup defines the following patterns for marking changes to a
 ;; text:
-;; 
+;;
 ;; -   Addition {++ ++}
 ;; -   Deletion {-- --}
 ;; -   Substitution {~~ ~> ~~}
 ;; -   Comment {>> <<}
 ;; -   Highlight {{ }}{>> <<}
-;; 
+;;
 ;; Activating cm-mode provides key bindings to insert the markup above and
 ;; thus mark one's changes to the text. The provided key bindings are:
-;; 
+;;
 ;; -   C-c * a: add text
 ;; -   C-c * d: delete text
 ;; -   C-c * s: substitute text
 ;; -   C-c * c: insert a comment (possibly with highlight)
-;; 
+;;
 ;; The commands to delete or substitute text operate on the region. The
 ;; command to insert a comment can be used with an active region, in which
 ;; case the text in the region will be highlighted. It can also be used
@@ -62,10 +62,10 @@
 ;; else, it just adds a lone comment. The commands for inserting and
 ;; substituting text and for inserting a comment all put the cursor at the
 ;; correct position, so you can start typing right away.
-;; 
+;;
 ;; Follow changes mode
 ;; -------------------
-;; 
+;;
 ;; cm-mode also provides a simple 'follow changes' mode. When activated,
 ;; changes you make to the buffer are automatically marked as insertions or
 ;; deletions. Substitutions cannot be made automatically (that is, if you
@@ -74,59 +74,60 @@
 ;; they can still be made manually with C-c * s. You can activate and
 ;; deactivate follow changes mode with C-c * F. When it's active, the
 ;; modeline indicator for cm-mode changes from cm to cm*.
-;; 
+;;
 ;; Follow changes mode should be considered experimental, so try at your
 ;; own risk. If you run into problems, open an issue on Github or send me
 ;; an email.
-;; 
+;;
 ;; Accepting or rejecting changes
 ;; ------------------------------
-;; 
+;;
 ;; One can interactively accept or reject a change by putting the cursor
 ;; inside it and hitting C-c * i. For additions, deletions and
 ;; substitutions, you get a choice between a to accept the change or r to
 ;; reject it. There are two other choices, s to skip this change or q to
 ;; quit. Both leave the change untouched and if you're just dealing with
 ;; the change at point, they are essentially identical.
-;; 
+;;
 ;; For comments and highlights, the choices are different: d to delete the
 ;; comment or highlight (whereby the latter of course retains the
 ;; highlighted text, but the comment and the markup are removed), or k to
 ;; keep the comment or highlight. Again q quits and is essentially
 ;; identical to k. (Note that you can also use s instead of k, in case you
 ;; get used to skipping changes that way.)
-;; 
+;;
 ;; You can interactively accept or reject all changes with C-c * I (that is
 ;; a capital i). This will go through each change asking you whether you
 ;; want to accept, reject or skip it, or delete or keep it. Typing q quits
 ;; the accept/reject session.
-;; 
+;;
 ;; Font lock
 ;; ---------
-;; 
+;;
 ;; cm-mode also adds the markup patterns defined by CriticMarkup to
 ;; font-lock-keywords and provides customisable faces to highlight them.
 ;; The customisation group is called criticmarkup.
-;; 
+;;
 ;; You may notice that changes that span multiple lines are not
 ;; highlighted. The reason for this is that multiline font lock in Emacs is
 ;; not straightforward. There are ways to deal with this, but since cm-mode
 ;; is a minor mode, it could interfere with the major mode's font locking
 ;; mechanism if it did that.
-;; 
+;;
 ;; To mitigate this problem, you can use soft wrap (with visual-line-mode).
 ;; Since each paragraph is then essentially a single line, font lock works
 ;; even across multiple (visual) lines.
-;; 
+;;
 ;; TODO
 ;; ----
-;; 
+;;
 ;; -   Commands to accept or reject all changes in one go.
 ;; -   Mouse support?
 
 ;;; Code:
 
 (require 'thingatpt)
+(require 'cl-macs)
 
 (defvar cm-delimiters '((cm-addition "{++" "++}")
                         (cm-deletion "{--" "--}")
@@ -171,6 +172,14 @@ flag to indicate this. (Though they should actually use the macro
 (make-variable-buffer-local 'cm-current-markup-overlay)
 
 (defgroup criticmarkup nil "Minor mode for CriticMarkup." :group 'wp)
+
+(defcustom cm-auto-comment nil
+  "*Comment that is automatically inserted when marking a change."
+  :group 'criticmarkup
+  :safe 'stringp
+  :type '(choice (const :tag "None" nil)
+                 (string :tag "Comment")))
+(make-variable-buffer-local 'cm-auto-comment)
 
 (defface cm-addition-face '((t (:foreground "green")))
   "*Face for CriticMarkup additions."
@@ -289,6 +298,33 @@ details."
   (cm-without-following-changes
     ad-do-it))
 
+(defun cm-insert-markup (type &optional text)
+  "Insert CriticMarkup of TYPE.
+Also insert TEXT if non-NIL. For deletions, TEXT is the deleted
+text; for substitutions, the text to be substituted; for
+comments, the text to be highlighted.
+
+If `cm-auto-comment' is set, a comment is added with its value.
+
+If TYPE is 'cm-highlight, a comment is added, which optionally
+starts with `cm-auto-comment' followed by colon-space."
+  (multiple-value-bind (bdelim edelim) (cdr (assq type cm-delimiters))
+    (insert (or bdelim "")
+            (or text (if (and (eq type 'cm-comment)
+                              cm-auto-comment)
+                         (concat cm-auto-comment ": ")
+                       ""))
+            (if (eq type 'cm-substitution) "~>" "")
+            (or edelim "")))
+  (if (and (not (eq type 'cm-comment))
+           (or cm-auto-comment (eq type 'cm-highlight)))
+      (insert (format "{>>%s%s<<}"
+                      (or cm-auto-comment "")
+                      (if (and (eq type 'cm-highlight)
+                               cm-auto-comment)
+                          ": "
+                        "")))))
+
 ;; Making an addition is fairly simple: we just need to add markup if point
 ;; isn't already at an addition markup, and then position point
 ;; appropriately. The user can then type new text. A deletion is more
@@ -327,11 +363,10 @@ combined with it, even if point is right outside it. (That avoids
 having two additions adjacent to each other.) If it is another
 kind of markup, and point is inside the curly braces, we make
 sure point is not in the delimiter before adding text."
-  (if (or (eq (car change) 'cm-addition)
-          (cm-point-inside-change-p change))
-      (cm-move-into-markup (car change))
-    (insert "{++++}")
-    (backward-char 3)))
+  (unless (or (eq (car (cm-expand-change change)) 'cm-addition)
+              (cm-point-inside-change-p change))
+    (cm-insert-markup 'cm-addition))
+  (cm-move-into-markup 'cm-addition))
 
 (defun cm-make-deletion (text &optional backspace)
   "Reinsert TEXT into the buffer and add deletion markup if necessary.
@@ -345,14 +380,13 @@ point will then be left before the deletion markup."
   (let ((change (cm-markup-at-point)))
     (unless (cm-point-inside-change-p change)
       (save-excursion
-        (if (not (or change
-                     (eq (car change) 'cm-deletion)))
-            (insert (concat "{--" text "--}"))
+        (if (not (eq (car (cm-expand-change change)) 'cm-deletion))
+            (cm-insert-markup 'cm-deletion text)
           (cm-move-into-markup 'cm-deletion)
           (insert text)))
       ;; the save-excursion leaves point at the start of the deletion markup
       (unless backspace
-        (cm-end-of-markup 'cm-deletion)))))
+        (cm-forward-out-of-change)))))
 
 (defun cm-substitution (beg end)
   "Mark a substitution."
@@ -361,8 +395,8 @@ point will then be left before the deletion markup."
     (error "Cannot make a substitution here")) ; TODO we should check whether the region contains markup.
   (cm-without-following-changes
     (let ((text (delete-and-extract-region beg end)))
-      (insert (concat "{~~"  text "~>~~}"))
-      (backward-char 3))))
+      (cm-insert-markup 'cm-substitution text)
+      (backward-char 3)))) ; TODO account for comment
 
 (defun cm-comment (beg end)
   "Add a comment.
@@ -380,12 +414,14 @@ If point is in an existing change, the comment is added after it."
        ;; contains a change but point is outside of it...
        ((use-region-p)
         (setq text (delete-and-extract-region beg end))))
-      (insert (if text (concat "{{" text "}}") "") "{>><<}")
-      (backward-char 3))))
+      (if text
+          (cm-insert-markup 'cm-highlight text)
+        (cm-insert-markup 'cm-comment))
+      (backward-char 3)))) ; TODO account for comment if we've inserted a highlight
 
 (defun cm-point-at-delim (delim &optional end strict)
   "Return non-NIL if point is at a delimiter.
-If DELIM is an end delimiter, optional argument END must be T. 
+If DELIM is an end delimiter, optional argument END must be T.
 
 Point counts as being at delim if it is in a delimiter or
 directly outside, but not when it is directly inside. So `|{++',
@@ -419,11 +455,13 @@ type."
   (cond
    ((> n 0)                             ; moving forward
     (let ((delim (third (assq type cm-delimiters))))
-      (backward-char (- 3 (or (cm-point-at-delim delim t t) 3))) ; adjust point if it's inside a delim
+      (backward-char (- (length delim) (or (cm-point-at-delim delim t t)
+                                           (length delim)))) ; adjust point if it's inside a delim
       (re-search-forward (regexp-quote delim) nil t n)))
    (t                                   ; moving backward
     (let ((delim (second (assq type cm-delimiters))))
-      (forward-char (- 3 (or (cm-point-at-delim delim nil t) 3))) ; adjust point if it's inside a delim
+      (forward-char (- (length delim) (or (cm-point-at-delim delim nil t)
+                                          (length delim)))) ; adjust point if it's inside a delim
       (re-search-backward (regexp-quote delim) nil t (abs n))))))
 
 (defun cm-beginning-of-markup (type)
@@ -441,19 +479,22 @@ type."
 (defun cm-move-past-delim (delim &optional end)
   "Move point past DELIM into the markup.
 If DELIM is an end delimiter, END must be T. If point is not at a
-delimiter, do not move."
-  (if end
-      (backward-char (- 3 (or (cm-point-at-delim delim end)
-                              3)))
-    (forward-char (- 3 (or (cm-point-at-delim delim)
-                           3)))))
+delimiter, do not move. Return T if point has moved."
+  (let ((len (length delim))
+        (pos (point)))
+    (if end
+        (backward-char (- len (or (cm-point-at-delim delim end)
+                                  len)))
+      (forward-char (- len (or (cm-point-at-delim delim)
+                               len))))
+    (/= pos (point))))
 
 (defun cm-move-into-markup (type)
   "Make sure point is inside the delimiters of TYPE."
-  ;; we simply call cm-move-past-delim twice, since it's harmless if we're
-  ;; not on the right delimiter.
-  (cm-move-past-delim (second (assq type cm-delimiters)))
-  (cm-move-past-delim (third (assq type cm-delimiters)) t))
+  (unless (cm-move-past-delim (second (assq type cm-delimiters)))
+    (if (eq (car (cm-markup-at-point t)) 'cm-comment)
+        (cm-forward-markup 'cm-comment -1))
+    (cm-move-past-delim (third (assq type cm-delimiters)) t)))
 
 (defun cm-forward-addition (&optional n)
   "Move forward N addition markups.
@@ -462,11 +503,11 @@ If N is negative, move backward."
 
 (defun cm-beginning-of-addition ()
   "Move to the beginning of an addition."
-  (cm-forward-markup 'cm-addition -1))
+  (cm-beginning-of-markup 'cm-addition))
 
 (defun cm-end-of-addition ()
   "Move to the end of an addition."
-  (cm-forward-markup 'cm-addition 1))
+  (cm-end-of-markup 'cm-addition))
 
 (put 'cm-addition 'forward-op 'cm-forward-addition)
 (put 'cm-addition 'beginning-op 'cm-beginning-of-addition)
@@ -478,12 +519,12 @@ If N is negative, move backward."
   (cm-forward-markup 'cm-deletion n))
 
 (defun cm-beginning-of-deletion ()
-  "Move to the beginning of an deletion."
-  (cm-forward-markup 'cm-deletion -1))
+  "Move to the beginning of a deletion."
+  (cm-beginning-of-markup 'cm-deletion))
 
 (defun cm-end-of-deletion ()
-  "Move to the end of an deletion."
-  (cm-forward-markup 'cm-deletion 1))
+  "Move to the end of a deletion."
+  (cm-end-of-markup 'cm-deletion))
 
 (put 'cm-deletion 'forward-op 'cm-forward-deletion)
 (put 'cm-deletion 'beginning-op 'cm-beginning-of-deletion)
@@ -495,12 +536,12 @@ If N is negative, move backward."
   (cm-forward-markup 'cm-substitution n))
 
 (defun cm-beginning-of-substitution ()
-  "Move to the beginning of an substitution."
-  (cm-forward-markup 'cm-substitution -1))
+  "Move to the beginning of a substitution."
+  (cm-beginning-of-markup 'cm-substitution))
 
 (defun cm-end-of-substitution ()
-  "Move to the end of an substitution."
-  (cm-forward-markup 'cm-substitution 1))
+  "Move to the end of a substitution."
+  (cm-end-of-markup 'cm-substitution))
 
 (put 'cm-substitution 'forward-op 'cm-forward-substitution)
 (put 'cm-substitution 'beginning-op 'cm-beginning-of-substitution)
@@ -512,12 +553,12 @@ If N is negative, move backward."
   (cm-forward-markup 'cm-comment n))
 
 (defun cm-beginning-of-comment ()
-  "Move to the beginning of an comment."
-  (cm-forward-markup 'cm-comment -1))
+  "Move to the beginning of a comment."
+  (cm-beginning-of-markup 'cm-comment))
 
 (defun cm-end-of-comment ()
-  "Move to the end of an comment."
-  (cm-forward-markup 'cm-comment 1))
+  "Move to the end of a comment."
+  (cm-end-of-markup 'cm-comment))
 
 (put 'cm-comment 'forward-op 'cm-forward-comment)
 (put 'cm-comment 'beginning-op 'cm-beginning-of-comment)
@@ -528,23 +569,13 @@ If N is negative, move backward."
 If N is negative, move backward."
   (cm-forward-markup 'cm-highlight n))
 
-  ;; (or n (setq n 1))
-  ;; (cond
-  ;;  ((> n 0)
-  ;;   (re-search-forward "}}" nil t n))
-  ;;  (t
-  ;;   (when (and (looking-back "{" (1- (point)))
-  ;;              (looking-at "{"))
-  ;;     (forward-char))
-  ;;   (re-search-backward "{{" nil t (abs n)))))
-
 (defun cm-beginning-of-highlight ()
-  "Move to the beginning of an highlight."
-  (cm-forward-markup 'cm-highlight -1))
+  "Move to the beginning of a highlight."
+  (cm-beginning-of-markup 'cm-highlight))
 
 (defun cm-end-of-highlight ()
-  "Move to the end of an highlight."
-  (cm-forward-markup 'cm-highlight 1))
+  "Move to the end of a highlight."
+  (cm-end-of-markup 'cm-highlight))
 
 (put 'cm-highlight 'forward-op 'cm-forward-highlight)
 (put 'cm-highlight 'beginning-op 'cm-beginning-of-highlight)
@@ -569,58 +600,72 @@ is not included."
                    (point))))
         (list beg end))))
 
-(defun cm-markup-at-point ()
+;; (defun cm-markup-at-point (&optional backward)
+;;   "Find the markup at point.
+;; Return a list of the form (TYPE TEXT START-POS END-POS), or NIL
+;; if point is not at a markup.
+
+;; Note that if point is in between two markups, this function
+;; returns the one that follows point, unless BACKWARD is non-NIL."
+;;   (let ((type (catch 'found
+;;                 (dolist (type (mapcar #'car cm-delimiters))
+;;                   (when (thing-at-point type)
+;;                     (throw 'found type))))))
+;;     (when type
+;;       (append (list type) (list (thing-at-point type)) (cm-bounds-of-markup-at-point type)))))
+
+(defun cm-markup-at-point (&optional backward)
   "Find the markup at point.
 Return a list of the form (TYPE TEXT START-POS END-POS), or NIL
-if point is not at a markup."
-  ;; if point is in between two markups, the one that is first in
-  ;; cm-delimiters will be returned, regardless whether it's before or
-  ;; after point. this is not very pretty, but it does no harm, so no need
-  ;; to change it.
-  (let ((type (catch 'found
-                (dolist (type (mapcar #'car cm-delimiters))
-                  (when (thing-at-point type)
-                    (throw 'found type))))))
+if point is not at a markup.
+
+Note that if point is in between two markups, this function
+returns the one that follows point, unless BACKWARD is non-NIL."
+  (let* ((types (delq nil (mapcar #'(lambda (tp)
+                                      (if (thing-at-point tp)
+                                          tp))
+                                  (mapcar #'car cm-delimiters))))
+         (type (if (= (length types) 1)
+                   (car types)
+                 (save-excursion
+                   (forward-char (if backward -1 1))
+                   (if (thing-at-point (car types))
+                       (car types)
+                     (cadr types))))))
     (when type
       (append (list type) (list (thing-at-point type)) (cm-bounds-of-markup-at-point type)))))
 
-(defun cm-point-inside-change-p (change &optional correction)
+(defun cm-point-inside-change-p (change)
   "Return T if point is inside CHANGE.
 CHANGE is a change as returned by `cm-markup-at-point'. Point is
 within a change if it's inside the curly braces, not directly
-outside of them. The latter counts as being AT a change.
-
-If non-NIL, CORRECTION is added to the value of point; this is
-useful if `cm-point-inside-change-p' is used after a deletion but
-with a change that follows that deletion but was extracted before
-it."
+outside of them. The latter counts as being AT a change."
   (and change ; if there *is* no change, we're not inside one...
-       (not (or (= (+ (or correction 0) (point)) (third change))
-                (= (+ (or correction 0) (point)) (fourth change))))))
+       (> (point) (third change))
+       (< (point) (fourth change))))
 
 (defun cm-expand-change (change)
   "Expand CHANGE with a following comment or, if a comment, with a preceding change.
 If CHANGE is a comment, check if there's another change preceding
 it; if so, include it and change the type accordingly. If CHANGE
 is of any other type, check if there's a commend and include it."
-  (cond
-   ((eq (car change) 'cm-comment)
-    (save-excursion
-      (cm-beginning-of-comment)
-      (skip-chars-backward "[:space:]") ; allow for any whitespace between change and comment
-      (backward-char 3)                 ; adjust point
-      (let ((preceding (cm-markup-at-point)))
-        (if preceding
-            (list (car preceding) (concat (second preceding) (second change)) (third preceding) (fourth change))
-          change))))
-   (t (save-excursion
-        (cm-end-of-markup (car change))
-        (skip-chars-forward "[:space:]") ; allow for any whitespace between change and comment
-        (forward-char 3)                 ; adjust point
-        (let ((comment (cm-markup-at-point)))
-          (if (eq (car comment) 'cm-comment)
-              (list (car change) (concat (second change) (second comment)) (third change) (fourth comment))
-            change))))))
+  (unless (not change)
+    (cond
+     ((eq (car change) 'cm-comment)
+      (save-excursion
+        (cm-beginning-of-comment)
+        (backward-char 3)               ; hard-coded adjustment of point
+        (let ((preceding (cm-markup-at-point)))
+          (if preceding
+              (list (car preceding) (concat (second preceding) (second change)) (third preceding) (fourth change))
+            change))))
+     (t (save-excursion
+          (cm-end-of-markup (car change))
+          (forward-char 3)              ; hard-coded adjustment of point
+          (let ((comment (cm-markup-at-point)))
+            (if (eq (car comment) 'cm-comment)
+                (list (car change) (concat (second change) (second comment)) (third change) (fourth comment))
+              change)))))))
 
 (defun cm-accept/reject-change-at-point (&optional interactive)
   "Accept or reject change at point interactively.
@@ -644,7 +689,7 @@ is NIL."
                                                 (capitalize (substring (symbol-name (car change)) 3)))
                                         '(?d ?k ?s ?q) t)))))
         (delete-overlay cm-current-markup-overlay)
-        (when (and (not interactive) (eq action ?q)) ; if the user aborted 
+        (when (and (not interactive) (eq action ?q)) ; if the user aborted
           (throw 'quit nil))                         ; get out
         (cond
          ((memq action '(?a ?r ?d))
