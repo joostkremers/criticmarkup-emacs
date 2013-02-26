@@ -468,7 +468,8 @@ backward if at a closing delimiter. When moving backward, point
 is moved past a comment if the change before the comment is of
 TYPE."
   (unless (cm-move-past-delim (second (assq type cm-delimiters)))
-    (if (eq (car (cm-markup-at-point t)) 'cm-comment)
+    (if (and (not (eq type 'cm-comment))
+             (eq (car (cm-markup-at-point t)) 'cm-comment))
         (cm-forward-markup 'cm-comment -1))
     (cm-move-past-delim (third (assq type cm-delimiters)) t)))
 
