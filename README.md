@@ -34,6 +34,11 @@ If you set the variable `cm-auto-comment` to a string, this string is automatica
 The variable `cm-auto-comment` can be set globally through Customize (or with `setq-default`), or buffer-locally. The latter can be done interactively, with `C-c * C`, or by using a file-local variable.
 
 
+## Navigating changes ##
+
+You can jump to the previous/next change with the commands `C-c * b` and `C-c * f`, respectively. If point is inside a change, you can jump out of it with `C-c * *`.
+
+
 ## Accepting or rejecting changes ##
 
 One can interactively accept or reject a change by putting the cursor inside it and hitting `C-c * i`. For additions, deletions and substitutions, you get a choice between `a` to accept the change or `r` to reject it. There are two other choices, `s` to skip this change or `q` to quit. Both leave the change untouched and if you're just dealing with the change at point, they are essentially identical. {>>They have different functions when accepting or rejecting all changes interactively, though.<<}
