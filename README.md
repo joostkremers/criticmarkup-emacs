@@ -17,7 +17,7 @@ Activating `cm-mode` provides key{--s--} {++bindings ++}to insert the {~~pattern
 - `C-c * s`: substitute text
 - `C-c * c`: insert a comment (possibly with highlight)
 
-The commands to delete or substitute text operate on the region. The command to insert a comment can be used with an active region, in which case the text in the region will be highlighted. It can also be used inside an existing markup to add a comment to it. If it is used anywhere else, it just adds a lone comment. The commands for inserting and substituting text and for inserting a comment all put the cursor at the correct position, so you can start typing right away. 
+The commands to delete or substitute text operate on the region. The command to insert a comment can be used with an active region, in which case the text in the region will be highlighted. It can also be used inside an existing markup to add a comment to it. If it is used anywhere else, it just adds a lone comment. The commands for inserting and substituting text and for inserting a comment {++all++} put the cursor at the correct position, so you can start typing right away. 
 
 
 ## Follow changes mode ##
@@ -31,7 +31,7 @@ Follow changes mode should be considered experimental, so try at your own risk. 
 
 One can interactively accept or reject a change by putting the cursor inside it and hitting `C-c * i`. For additions, deletions and substitutions, you get a choice between `a` to accept the change or `r` to reject it. There are two other choices, `s` to skip this change or `q` to quit. Both leave the change untouched and if you're just dealing with the change at point, they are essentially identical. {>>They have different functions when accepting or rejecting all changes interactively, though.<<}
 
-For comments and highlights, the choices are different: `d` to delete the comment or highlight (whereby the latter of course retains the highlighted text, but the comment and the markup are removed), or `k` to keep the comment or highlight. Again `q` quits and is essentially identical to `k`. (Note that you can also use `s` instead of `k`, in case you get used to skipping changes that way.)
+For comments and highlights, the choices are different: `d` to delete the comment or highlight (whereby the latter of course retains the {~~commented~>highlighted~~} text, but the comment and the markup are removed), or `k` to keep the comment or highlight. Again `q` quits and is essentially identical to `k`. (Note that you can also use `s` instead of `k`, in case you get used to skipping changes that way.)
 
 You can interactively accept or reject all changes with `C-c * I` (that is a capital `i`). This will go through each change asking you whether you want to accept, reject or skip it, or delete or keep it. Typing `q` quits the accept/reject session.
 
