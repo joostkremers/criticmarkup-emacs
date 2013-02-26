@@ -110,7 +110,14 @@ flag to indicate this. (Though they should actually use the macro
   "Overlay marking the current highlight.")
 (make-variable-buffer-local 'cm-current-markup-overlay)
 
-(defgroup criticmarkup nil "Minor mode for CriticMarkup." :group 'wp)
+(defgroup criticmarkup nil "Minor mode for CriticMarkup."
+  :prefix "cm-"
+  :group 'wp
+  :group 'markdown)
+
+(defgroup criticmarkup-faces nil "Faces for CriticMarkup."
+  :prefix "cm-"
+  :group 'criticmarkup)
 
 (defcustom cm-auto-comment nil
   "*Comment that is automatically inserted when marking a change."
@@ -122,23 +129,23 @@ flag to indicate this. (Though they should actually use the macro
 
 (defface cm-addition-face '((t (:foreground "green")))
   "*Face for CriticMarkup additions."
-  :group 'criticmarkup)
+  :group 'criticmarkup-faces)
 
 (defface cm-deletion-face '((t (:foreground "red")))
   "*Face for CriticMarkup deletions."
-  :group 'criticmarkup)
+  :group 'criticmarkup-faces)
 
 (defface cm-substitution-face '((t (:foreground "orange")))
   "*Face for CriticMarkup substitutions."
-  :group 'criticmarkup)
+  :group 'criticmarkup-faces)
 
 (defface cm-comment-face '((t (:foreground "blue")))
   "*Face for CriticMarkup comments."
-  :group 'criticmarkup)
+  :group 'criticmarkup-faces)
 
 (defface cm-highlight-face '((t (:foreground "magenta")))
   "*Face for CriticMarkup highlights."
-  :group 'criticmarkup)
+  :group 'criticmarkup-faces)
 
 (defvar cm-addition-face 'cm-addition-face
   "CriticMarkup addition face.")
