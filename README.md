@@ -27,11 +27,9 @@ The commands to delete or substitute text operate on the region. The command to 
 
 ## Automaticaly adding comments ##
 
-If you want to automatically add a comment to every change you make, for example to keep track of who made the change, you can set the variable `cm-auto-comment` to the desired text. (Don't include the comment markup itself.) Once set, every change is automatically commented. If you explicitly make a comment with `C-c * c`, the value of `cm-auto-comment` is inserted at the beginning of the comment followed by a colon and a space.
+If you want to automatically add a comment to every change you make, for example to keep track of who made the change, you can set the variable `cm-auto-comment` to the desired text. (Don't include the comment markup itself.) Once set, every change is automatically commented. If you explicitly make a comment with `C-c * c`, the value of `cm-auto-comment` is inserted at the beginning of the comment, followed by a colon and a space.
 
-The variable `cm-auto-comment` can be set globally through Customize (or with `setq-default` in your init file). This sets the global value, but each buffer can have a buffer-local value as well. You can set a buffer-local value with `C-c * C`, in which case the value is not permanent: when you kill the buffer (or reload the file it's visiting), the value is reset to the global value.
-
-Alternatively, you can use a file-local or directory-local variable to set `cm-auto-comment`. This will make the value permanent for the relevant file(s). (Note: if you use [Pandoc](http://johnmacfarlane.net/pandoc/), you can specify file-local variables with html comments, since Pandoc ignores html comments for any output format.)
+The variable `cm-auto-comment` can be set globally through Customize (or with `setq-default` in your init file). This sets the global value. You can override this global value in a particular buffer by setting a buffer-local value. There are essentially two ways to do this: you can use `C-c * C`, which will only set the value for the current session, or with a file-local (or directory-local) variable, which makes sure the value is set every time the file is loaded. (Note: if you use [Pandoc](http://johnmacfarlane.net/pandoc/), you can specify file-local variables with html comments, since Pandoc ignores html comments for any output format.)
 
 
 ## Navigating changes ##
