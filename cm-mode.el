@@ -35,18 +35,19 @@
 
 ;; CriticMarkup for Emacs
 ;; ======================
-;; 
+;;
 ;; `cm-mode' is a minor mode that provides support for CriticMarkup in Emacs.
-;; 
-;; CriticMarkup defines the following patterns for marking changes to a
-;; text:
-;; 
+;;
+;; CriticMarkup is a way for authors and editors to track changes to
+;; documents in plain text. It defines the following patterns for marking
+;; changes:
+;;
 ;; - Addition {++ ++}
 ;; - Deletion {-- --}
 ;; - Substitution {~~ ~> ~~}
 ;; - Comment {>> <<}
 ;; - Highlight {{ }}{>> <<}
-;; 
+;;
 ;; `cm-mode' provides the following functionality:
 ;;
 ;; - font lock support
@@ -55,11 +56,32 @@
 ;; - accept/reject changes interactively.
 ;; - navigation to move between changes.
 ;;
+;;
+;; Key bindings
+;; ------------
+;;
+;; `C-c*a' : add text
+;; `C-c*d' : delete text
+;; `C-c*s' : make a substitution
+;; `C-c*c' : add a comment
+;; `C-c*i' : accept/reject change at point
+;; `C-c*I' : accept/reject all changes interactively
+;; `C-c**' : move forward out of a change
+;; `C-c*f' : move forward to the next change
+;; `C-c*b' : move backward to the previous change
+;; `C-c*C' : set auto-comment
+;; `C-c*F' : activate follow changes mode
+;;
+;;
+;; Usage
+;; -----
+;;
 ;; See README.md for details.
-;; 
+;;
+;;
 ;; TODO
 ;; ----
-;; 
+;;
 ;; - Commands to accept or reject all changes in one go.
 ;; - Mouse support?
 
@@ -371,7 +393,7 @@ If point is in an existing change, the comment is added after it."
 
 (defun cm-point-at-delim (delim &optional end strict)
   "Return non-NIL if point is at a delimiter.
-If DELIM is an end delimiter, optional argument END must be T. 
+If DELIM is an end delimiter, optional argument END must be T.
 
 Point counts as being at delim if it is in a delimiter or
 directly outside, but not when it is directly inside. So `|{++',
@@ -604,7 +626,7 @@ is of any other type, check if there's a commend and include it."
      ((eq (car change) 'cm-comment)
       (save-excursion
         (cm-beginning-of-comment)
-        (backward-char 3)               ; hard-coded adjustment of point 
+        (backward-char 3)               ; hard-coded adjustment of point
         (let ((preceding (cm-markup-at-point)))
           (if preceding
               (list (car preceding) (concat (second preceding) (second change)) (third preceding) (fourth change))
@@ -639,7 +661,7 @@ is NIL."
                                                 (capitalize (substring (symbol-name (car change)) 3)))
                                         '(?d ?k ?s ?q) t)))))
         (delete-overlay cm-current-markup-overlay)
-        (when (and (not interactive) (eq action ?q)) ; if the user aborted 
+        (when (and (not interactive) (eq action ?q)) ; if the user aborted
           (throw 'quit nil))                         ; get out
         (cond
          ((memq action '(?a ?r ?d))
