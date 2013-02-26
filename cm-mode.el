@@ -368,7 +368,7 @@ point will then be left before the deletion markup."
   (cm-without-following-changes
     (let ((text (delete-and-extract-region beg end)))
       (cm-insert-markup 'cm-substitution text)
-      (backward-char 3)))) ; TODO account for comment
+      (cm-move-into-markup 'cm-substitution))))
 
 (defun cm-comment (beg end)
   "Add a comment.
@@ -389,7 +389,7 @@ If point is in an existing change, the comment is added after it."
       (if text
           (cm-insert-markup 'cm-highlight text)
         (cm-insert-markup 'cm-comment))
-      (backward-char 3)))) ; TODO account for comment if we've inserted a highlight
+      (cm-move-into-markup 'cm-comment))))
 
 (defun cm-point-at-delim (delim &optional end strict)
   "Return non-NIL if point is at a delimiter.
