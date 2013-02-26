@@ -60,17 +60,17 @@
 ;; Key bindings
 ;; ------------
 ;;
-;; `C-c*a' : add text
-;; `C-c*d' : delete text
-;; `C-c*s' : make a substitution
-;; `C-c*c' : add a comment
-;; `C-c*i' : accept/reject change at point
-;; `C-c*I' : accept/reject all changes interactively
-;; `C-c**' : move forward out of a change
-;; `C-c*f' : move forward to the next change
-;; `C-c*b' : move backward to the previous change
-;; `C-c*C' : set auto-comment
-;; `C-c*F' : activate follow changes mode
+;; `C-c * a' : add text
+;; `C-c * d' : delete text
+;; `C-c * s' : make a substitution
+;; `C-c * c' : add a comment
+;; `C-c * i' : accept/reject change at point
+;; `C-c * I' : accept/reject all changes interactively
+;; `C-c * *' : move forward out of a change
+;; `C-c * f' : move forward to the next change
+;; `C-c * b' : move backward to the previous change
+;; `C-c * C' : set auto-comment
+;; `C-c * F' : activate follow changes mode
 ;;
 ;;
 ;; Usage
@@ -83,6 +83,8 @@
 ;; ----
 ;;
 ;; - Commands to accept or reject all changes in one go.
+;; - Do not combine two adjacent additions/deletions if the auto-comment is
+;;   different.
 ;; - Mouse support?
 
 ;;; Code:
