@@ -29,7 +29,7 @@ Follow changes mode should be considered experimental, so try at your own risk. 
 
 ## Automaticaly adding comments ##
 
-If you set the variable `cm-auto-comment` to a string, this string is automatically added to every change as a comment. If you explicitly make a comment with `C-c * c`, this string is inserted at the beginning of the comment followed by a colon and a space. You can use this, for example, to keep track of who makes a certain change.
+If you set the variable `cm-auto-comment` to a string, this string is automatically added to every change as a comment. If you explicitly make a comment with `C-c * c`, this string is inserted at the beginning of the comment followed by a colon and a space. You can use this to keep track of who makes a certain change, for example.
 
 The variable `cm-auto-comment` can be set globally through Customize (or with `setq-default`), or buffer-locally. The latter can be done interactively, with `C-c * C`, or by using a file-local variable.
 
