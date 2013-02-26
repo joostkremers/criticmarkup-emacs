@@ -344,8 +344,7 @@ sure point is not in the delimiter before adding text."
 
 (defun cm-make-deletion (text &optional backspace)
   "Reinsert TEXT into the buffer and add deletion markup if necessary.
-TEXT is the text that's being deleted, CHANGE the change at
-point, if any.
+TEXT is the text that's being deleted.
 
 If BACKSPACE is T, the deletion was done with the backspace key;
 point will then be left before the deletion markup."
