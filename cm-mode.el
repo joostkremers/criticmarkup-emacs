@@ -462,7 +462,11 @@ delimiter, do not move. Return T if point has moved."
     (/= pos (point))))
 
 (defun cm-move-into-markup (type)
-  "Make sure point is inside the delimiters of TYPE."
+  "Make sure point is inside the delimiters of TYPE.
+Point is either moved forward if at an opening delimiter or
+backward if at a closing delimiter. When moving backward, point
+is moved past a comment if the change before the comment is of
+TYPE."
   (unless (cm-move-past-delim (second (assq type cm-delimiters)))
     (if (eq (car (cm-markup-at-point t)) 'cm-comment)
         (cm-forward-markup 'cm-comment -1))
