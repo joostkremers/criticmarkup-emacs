@@ -24,8 +24,6 @@ The commands to delete or substitute text operate on the region. The command to 
 
 `cm-mode` also provides a simple 'follow changes' mode. When activated, changes you make to the buffer are automatically marked as insertions or deletions. Substitutions cannot be made automatically (that is, if you mark a word, delete it and then type a replacement, it will still be marked as sequence of deletion+insertion, not as a substitution), but they can still be made manually with `C-c * s`. You can activate and deactivate follow changes mode with `C-c * F`. When it's active, the modeline indicator for `cm-mode` changes from `cm` to `cm*`. 
 
-Follow changes mode should be considered experimental, so try at your own risk. If you run into problems, open an issue on Github or send me an email.
-
 
 ## Automaticaly adding comments ##
 
@@ -55,6 +53,11 @@ You can interactively accept or reject all changes with `C-c * I` (that is a cap
 You may notice that changes that span multiple lines are not highlighted. The reason for this is that multiline font lock in Emacs is not straightforward. There are ways to deal with this, but since `cm-mode` is a minor mode, it could interfere with the major mode's font locking mechanism if it did that.
 
 To mitigate this problem, you can use soft wrap (with `visual-line-mode`). Since each paragraph is then essentially a single line, font lock works even across multiple (visual) lines.
+
+
+## Disclaimer ##
+
+`cm-mode` should be considered alpha software, so try at your own risk. If you run into problems, I would very much appreciate it if you open an issue on Github or send me an email.
 
 
 ## TODO ##
