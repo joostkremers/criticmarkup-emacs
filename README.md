@@ -17,7 +17,7 @@ Activating `cm-mode` provides key{--s--} {++bindings ++}to insert the {~~pattern
 - `C-c * s`: substitute text
 - `C-c * c`: insert a comment (possibly with highlight)
 
-The commands to delete or substitute text operate on the region. The command to insert a comment can be used with an active region, in which case the text in the region will be highlighted. It can also be used inside an existing markup to add a comment to it. If it is used anywhere else, it just adds a lone comment. The commands for inserting and substituting text and for inserting a comment {++all++} put the cursor at the correct position, so you can start typing right away. 
+The commands to delete or substitute text operate on the region. The command to insert a comment can be used with an active region, in which case the text in the region will be highlighted. It can also be used inside an existing markup to add a comment to it. If it is used anywhere else, it just adds a lone comment. The commands for inserting and substituting text and for inserting a comment {++all ++}put the cursor at the correct position, so you can start typing right away.
 
 
 ## Follow changes mode ##
