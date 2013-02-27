@@ -708,7 +708,7 @@ substitutions, `d' for comments and highlights."
       "")
      ((and (eq type 'cm-highlight)
            (eq action ?d))
-      (string-match "{==\\(.*?\\==}}" text)
+      (string-match "{==\\(.*?\\)==}" text)
       (match-string 1 text)))))
 
 (defun cm-accept/reject-all-changes ()
