@@ -151,15 +151,15 @@ flag to indicate this. (Though they should actually use the macro
                  (string :tag "Comment")))
 (make-variable-buffer-local 'cm-auto-comment)
 
-(defface cm-addition-face '((t (:foreground "green")))
+(defface cm-addition-face '((t (:foreground "forest green")))
   "*Face for CriticMarkup additions."
   :group 'criticmarkup-faces)
 
-(defface cm-deletion-face '((t (:foreground "red")))
+(defface cm-deletion-face '((t (:foreground "red4")))
   "*Face for CriticMarkup deletions."
   :group 'criticmarkup-faces)
 
-(defface cm-substitution-face '((t (:foreground "orange")))
+(defface cm-substitution-face '((t (:foreground "OrangeRed3")))
   "*Face for CriticMarkup substitutions."
   :group 'criticmarkup-faces)
 
@@ -167,7 +167,7 @@ flag to indicate this. (Though they should actually use the macro
   "*Face for CriticMarkup comments."
   :group 'criticmarkup-faces)
 
-(defface cm-highlight-face '((t (:foreground "magenta")))
+(defface cm-highlight-face '((t (:foreground "dark magenta")))
   "*Face for CriticMarkup highlights."
   :group 'criticmarkup-faces)
 
