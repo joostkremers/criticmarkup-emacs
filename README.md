@@ -27,9 +27,9 @@ The commands to delete or substitute text operate on the region. The command to 
 
 ## Automaticaly adding comments ##
 
-If you want to automatically add a comment to every change you make, for example to keep track of who made the change, you can set the variable `cm-auto-comment` to the desired text. (Don't include the comment markup itself.) Once set, every change is automatically commented. If you explicitly make a comment with `C-c * c`, the value of `cm-auto-comment` is inserted at the beginning of the comment, followed by a colon and a space.
+If you want to automatically add a comment to every change you make, for example to keep track of who made the change, you can set the variable `cm-auto-comment` to the desired text. (Don't include the comment markup itself.) Once set, every change is automatically commented. If you explicitly make a comment with `C-c * c`, the value of `cm-auto-comment` is inserted at the beginning of the comment, followed by `:: ` (double colon space).
 
-The variable `cm-auto-comment` can be set globally through Customize (or with `setq-default` in your init file). This sets the global value. You can override this global value in a particular buffer by setting a buffer-local value. There are two ways to do this: you can use `C-c * C`, which will only set the value for the current session, or you can use a file-local (or directory-local) variable, which makes sure the value is set every time the file is loaded. (Note: if you use [Pandoc](http://johnmacfarlane.net/pandoc/), you can specify file-local variables with html comments, since Pandoc ignores html comments for any output format.)
+The variable `cm-auto-comment` can be set globally through Customize (or with `setq-default` in your init file). This sets the global value. You can override this global value in a particular buffer by setting a buffer-local value. There are two ways to do this: you can use `C-c * C`, which will only set the value for the current session, or you can use a file-local (or directory-local) variable, which makes sure the value is set every time the file is loaded. (Note: if you use [Pandoc](http://johnmacfarlane.net/pandoc/), you can specify file-local variables with html comments, since Pandoc ignores html comments for all output format.)
 
 
 ## Navigating changes ##

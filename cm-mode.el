@@ -281,12 +281,12 @@ comments, the text to be highlighted.
 If `cm-auto-comment' is set, a comment is added with its value.
 
 If TYPE is 'cm-highlight, a comment is added, which optionally
-starts with `cm-auto-comment' followed by colon-space."
+starts with `cm-auto-comment' followed by \":: \"."
   (multiple-value-bind (bdelim edelim) (cdr (assq type cm-delimiters))
     (insert (or bdelim "")
             (or text (if (and (eq type 'cm-comment)
                               cm-auto-comment)
-                         (concat cm-auto-comment ": ")
+                         (concat cm-auto-comment ":: ")
                        ""))
             (if (eq type 'cm-substitution) "~>" "")
             (or edelim "")))
@@ -296,7 +296,7 @@ starts with `cm-auto-comment' followed by colon-space."
                       (or cm-auto-comment "")
                       (if (and (eq type 'cm-highlight)
                                cm-auto-comment)
-                          ": "
+                          ":: "
                         "")))))
 
 ;; Making an addition is fairly simple: we just need to add markup if point
