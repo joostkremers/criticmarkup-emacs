@@ -69,7 +69,7 @@
 ;; `C-c * *' : move forward out of a change
 ;; `C-c * f' : move forward to the next change
 ;; `C-c * b' : move backward to the previous change
-;; `C-c * C' : set auto-comment
+;; `C-c * C' : set author
 ;; `C-c * F' : activate follow changes mode
 ;;
 ;;
@@ -83,7 +83,7 @@
 ;; ----
 ;;
 ;; - Commands to accept or reject all changes in one go.
-;; - Do not combine two adjacent additions/deletions if the auto-comment is
+;; - Do not combine two adjacent additions/deletions if the author is
 ;;   different.
 ;; - Mouse support?
 
@@ -143,13 +143,13 @@ flag to indicate this. (Though they should actually use the macro
   :prefix "cm-"
   :group 'criticmarkup)
 
-(defcustom cm-auto-comment nil
+(defcustom cm-author nil
   "*Comment that is automatically inserted when marking a change."
   :group 'criticmarkup
   :safe 'stringp
   :type '(choice (const :tag "None" nil)
-                 (string :tag "Comment")))
-(make-variable-buffer-local 'cm-auto-comment)
+                 (string :tag "Author")))
+(make-variable-buffer-local 'cm-author)
 
 (defface cm-addition-face '((t (:foreground "forest green")))
   "*Face for CriticMarkup additions."
@@ -197,7 +197,7 @@ flag to indicate this. (Though they should actually use the macro
     (define-key map "\C-c**" 'cm-forward-out-of-change)
     (define-key map "\C-c*f" 'cm-forward-change)
     (define-key map "\C-c*b" 'cm-backward-change)
-    (define-key map "\C-c*C" 'cm-set-auto-comment)
+    (define-key map "\C-c*C" 'cm-set-author)
     (define-key map "\C-c*F" 'cm-follow-changes)
     map)
   "Keymap for cm-mode.")
@@ -278,24 +278,24 @@ Also insert TEXT if non-NIL. For deletions, TEXT is the deleted
 text; for substitutions, the text to be substituted; for
 comments, the text to be highlighted.
 
-If `cm-auto-comment' is set, a comment is added with its value.
+If `cm-author' is set, a comment is added with its value.
 
 If TYPE is 'cm-highlight, a comment is added, which optionally
-starts with `cm-auto-comment' followed by \":: \"."
+starts with `cm-author' followed by \":: \"."
   (multiple-value-bind (bdelim edelim) (cdr (assq type cm-delimiters))
     (insert (or bdelim "")
             (or text (if (and (eq type 'cm-comment)
-                              cm-auto-comment)
-                         (concat cm-auto-comment ":: ")
+                              cm-author)
+                         (concat cm-author ":: ")
                        ""))
             (if (eq type 'cm-substitution) "~>" "")
             (or edelim "")))
   (if (and (not (eq type 'cm-comment))
-           (or cm-auto-comment (eq type 'cm-highlight)))
+           (or cm-author (eq type 'cm-highlight)))
       (insert (format "{>>%s%s<<}"
-                      (or cm-auto-comment "")
+                      (or cm-author "")
                       (if (and (eq type 'cm-highlight)
-                               cm-auto-comment)
+                               cm-author)
                           ":: "
                         "")))))
 
@@ -739,10 +739,10 @@ substitutions, `d' for comments and highlights."
   (interactive "p")
   (cm-forward-change (- n)))
 
-(defun cm-set-auto-comment (str)
-  "Set the auto-comment string."
-  (interactive "sSet auto-comment to: ")
-  (setq cm-auto-comment (if (string= str "") nil str)))
+(defun cm-set-author (str)
+  "Set the author string."
+  (interactive "sSet author to: ")
+  (setq cm-author (if (string= str "") nil str)))
 
 (provide 'cm-mode)
 

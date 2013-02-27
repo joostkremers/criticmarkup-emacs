@@ -25,11 +25,11 @@ The commands to delete or substitute text operate on the region. The command to 
 `cm-mode` also provides a simple 'follow changes' mode. When activated, changes you make to the buffer are automatically marked as insertions or deletions. Substitutions cannot be made automatically (that is, if you mark a word, delete it and then type a replacement, it will still be marked as a sequence of deletion+insertion, not as a substitution), but they can still be made manually with `C-c * s`. You can activate and deactivate follow changes mode with `C-c * F`. When it's active, the modeline indicator for `cm-mode` changes from `cm` to `cm*`. 
 
 
-## Automaticaly adding comments ##
+## Keeping track of the author ##
 
-If you want to automatically add a comment to every change you make, for example to keep track of who made the change, you can set the variable `cm-auto-comment` to the desired text. (Don't include the comment markup itself.) Once set, every change is automatically commented. If you explicitly make a comment with `C-c * c`, the value of `cm-auto-comment` is inserted at the beginning of the comment, followed by `:: ` (double colon space).
+Comments can be used to keep track of who made a particular change. If you want to do this automatically, you can set the variable `cm-author` to an identifier. When this variable is set, its value is automatically added as a comment to every change you make. If you explicitly make a comment with `C-c * c`, the value of `cm-author` is inserted at the beginning of the comment, followed by `:: ` (double colon space).
 
-The variable `cm-auto-comment` can be set globally through Customize (or with `setq-default` in your init file). This sets the global value. You can override this global value in a particular buffer by setting a buffer-local value. There are two ways to do this: you can use `C-c * C`, which will only set the value for the current session, or you can use a file-local (or directory-local) variable, which makes sure the value is set every time the file is loaded. (Note: if you use [Pandoc](http://johnmacfarlane.net/pandoc/), you can specify file-local variables with html comments, since Pandoc ignores html comments for all output format.)
+The variable `cm-author` can be set globally through Customize (or with `setq-default` in your init file). This sets the global value. You can override this global value in a particular buffer by setting a buffer-local value. There are two ways to do this: you can use `C-c * C`, which will only set the value for the current session, or you can use a file-local (or directory-local) variable, which makes sure the value is set every time the file is loaded. (Note: if you use [Pandoc](http://johnmacfarlane.net/pandoc/), you can specify file-local variables with html comments, since Pandoc ignores html comments for all output format.)
 
 
 ## Navigating changes ##
