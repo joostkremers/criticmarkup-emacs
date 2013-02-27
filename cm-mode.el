@@ -278,10 +278,11 @@ Also insert TEXT if non-NIL. For deletions, TEXT is the deleted
 text; for substitutions, the text to be substituted; for
 comments, the text to be highlighted.
 
-If `cm-author' is set, a comment is added with its value.
+If `cm-author' is set, a comment is added with its value,
+preceded with `@`.
 
 If TYPE is 'cm-highlight, a comment is added, which optionally
-starts with `cm-author' followed by \":: \"."
+starts with `cm-author'."
   (multiple-value-bind (bdelim edelim) (cdr (assq type cm-delimiters))
     (insert (or bdelim "")
             (or text (if (and (eq type 'cm-comment)
