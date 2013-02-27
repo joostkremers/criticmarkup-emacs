@@ -8,16 +8,16 @@ CriticMarkup is a way for authors and editors to track changes to documents in p
 - Deletion {-- --}
 - Substitution {~~ ~> ~~}
 - Comment {>> <<}
-- Highlight {{ }}{>> <<}
+- Highlight {== ==}{>> <<}
 
-Activating `cm-mode` provides key{--s--} {++bindings ++}to insert these {~~patterns~>markup tags~~} and thus mark one's changes to the text. The provided {==key bindings==}{>>@jk Should you mention that these are nicely mnemonic?<<} are:
+Activating `cm-mode` provides key bindings to insert these markup tags and thus mark one's changes to the text. The provided key bindingsare:
 
 - `C-c * a`: add text
 - `C-c * d`: delete text
 - `C-c * s`: substitute text
 - `C-c * c`: insert a comment (possibly with highlight)
 
-The commands to delete or substitute text operate on the region. The command to insert a comment can be used with an active region, in which case the text in the region will be highlighted. It can also be used inside an existing markup to add a comment to it. If it is used anywhere else, it just adds a lone comment. The commands for inserting and substituting text and for inserting a comment {++all ++}put {~~the cursor~>point~~} at the correct position, so you can start typing right away.
+The commands to delete or substitute text operate on the region. The command to insert a comment can be used with an active region, in which case the text in the region will be highlighted. It can also be used inside an existing markup to add a comment to it. If it is used anywhere else, it just adds a lone comment. The commands for inserting and substituting text and for inserting a comment all put point at the correct position, so you can start typing right away.
 
 Note: the [CriticMarkup spec](http://criticmarkup.com/spec.php) says you should avoid putting newlines in CriticMarkup tags and you should always wrap Markdown tags completely. These are wise precautions for `cm-mode` as well.
 
@@ -40,11 +40,11 @@ You can jump to the previous/next change with the commands `C-c * b` and `C-c * 
 
 ## Accepting or rejecting changes ##
 
-You can interactively accept or reject a change by putting the cursor inside it and hitting `C-c * i`. For additions, deletions and substitutions, you get a choice between `a` to accept the change or `r` to reject it. There are two other choices, `s` to skip this change or `q` to quit. Both leave the change untouched and if you're just dealing with the change at point, they are essentially identical. {>>They have different functions when accepting or rejecting all changes interactively, though.<<}
+You can interactively accept or reject a change by putting the cursor inside it and hitting `C-c * i`. For additions, deletions and substitutions, you get a choice between `a` to accept the change or `r` to reject it. There are two other choices, `s` to skip this change or `q` to quit. Both leave the change untouched and if you're just dealing with the change at point, they are essentially identical. (They have different functions when accepting or rejecting all changes interactively, though.)
 
-For comments and highlights, the choices are different: `d` to delete the comment or highlight (whereby the latter of course retains the {~~commented~>highlighted~~} text, but the comment and the markup are removed), or `k` to keep the comment or highlight. Again `q` quits and is essentially identical to `k`. (Note that you can also use `s` instead of `k`, in case you get used to skipping changes that way.)
+For comments and highlights, the choices are different: `d` to delete the comment or highlight (whereby the latter of course retains the highlighted text, but the comment and the markup are removed), or `k` to keep the comment or highlight. Again `q` quits and is essentially identical to `k`. (Note that you can also use `s` instead of `k`, in case you get used to skipping changes that way.)
 
-You can {++interactively ++}accept or reject{-- interactively--} all changes with `C-c * I` (that is a capital `i`). This will go through each change asking you whether you want to accept, reject or skip it, or delete or keep it. Typing `q` quits the accept/reject session.
+You can interactively accept or reject all changes with `C-c * I` (that is a capital `i`). This will go through each change asking you whether you want to accept, reject or skip it, or delete or keep it. Typing `q` quits the accept/reject session.
 
 
 ## Font lock ##
@@ -63,7 +63,7 @@ To mitigate this problem, you can use soft wrap (with `visual-line-mode`). Since
 
 ## TODO ##
 
-- Commands to accept or reject all changes in one go. {>>These won't be bound to keys, though.<<}
+- Commands to accept or reject all changes in one go. (These won't be bound to keys, though.)
 - Do not combine two adjacent additions/deletions if the auto-comment is different.
 - Mouse support?
 
