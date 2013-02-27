@@ -46,7 +46,7 @@
 ;; - Deletion {-- --}
 ;; - Substitution {~~ ~> ~~}
 ;; - Comment {>> <<}
-;; - Highlight {{ }}{>> <<}
+;; - Highlight {== ==}{>> <<}
 ;;
 ;; `cm-mode' provides the following functionality:
 ;;
@@ -96,7 +96,7 @@
                         (cm-deletion "{--" "--}")
                         (cm-substitution "{~~" "~~}")
                         (cm-comment "{>>" "<<}")
-                        (cm-highlight "{{" "}}"))
+                        (cm-highlight "{==" "==}"))
   "CriticMarkup Delimiters.")
 
 (defvar cm-follow-changes nil
@@ -127,7 +127,7 @@ flag to indicate this. (Though they should actually use the macro
 (defvar cm-comment-regexp "\\(?:{>>.*?<<}\\)"
   "CriticMarkup comment regexp.")
 
-(defvar cm-highlight-regexp "\\(?:{{.*?}}\\)"
+(defvar cm-highlight-regexp "\\(?:{==.*?==}\\)"
   "CriticMarkup highlight regexp.")
 
 (defvar cm-current-markup-overlay nil
@@ -286,18 +286,19 @@ starts with `cm-author' followed by \":: \"."
     (insert (or bdelim "")
             (or text (if (and (eq type 'cm-comment)
                               cm-author)
-                         (concat cm-author ":: ")
+                         (concat "@" cm-author " ")
                        ""))
             (if (eq type 'cm-substitution) "~>" "")
             (or edelim "")))
   (if (and (not (eq type 'cm-comment))
            (or cm-author (eq type 'cm-highlight)))
-      (insert (format "{>>%s%s<<}"
-                      (or cm-author "")
-                      (if (and (eq type 'cm-highlight)
-                               cm-author)
-                          ":: "
-                        "")))))
+      (insert "{>>"
+              (if cm-author (concat "@" cm-author))
+              (if (and (eq type 'cm-highlight)
+                       cm-author)
+                  " "
+                "")
+              "<<}")))
 
 ;; Making an addition is fairly simple: we just need to add markup if point
 ;; isn't already at an addition markup, and then position point
@@ -371,7 +372,7 @@ point will then be left before the deletion markup."
       (cm-insert-markup 'cm-substitution text)
       (cm-move-into-markup 'cm-substitution))))
 
-(defun cm-comment (beg end)
+(defun cm-comment (&optional beg end)
   "Add a comment.
 If the region is active, the text in the region is highlighted.
 If point is in an existing change, the comment is added after it."
@@ -706,7 +707,7 @@ substitutions, `d' for comments and highlights."
       "")
      ((and (eq type 'cm-highlight)
            (eq action ?d))
-      (string-match "{{\\(.*?\\)}}" text)
+      (string-match "{==\\(.*?\\==}}" text)
       (match-string 1 text)))))
 
 (defun cm-accept/reject-all-changes ()
