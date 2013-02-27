@@ -64,7 +64,7 @@ To mitigate this problem, you can use soft wrap (with `visual-line-mode`). Since
 ## TODO ##
 
 - Commands to accept or reject all changes in one go. (These won't be bound to keys, though.)
-- Do not combine two adjacent additions/deletions if the auto-comment is different.
+- Do not combine two adjacent additions/deletions if the author is different.
 - Mouse support?
 
 
