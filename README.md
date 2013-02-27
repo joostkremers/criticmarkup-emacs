@@ -28,7 +28,7 @@ Note: the [CriticMarkup spec](http://criticmarkup.com/spec.php) says you should 
 
 ## Keeping track of the author ##
 
-Comments can be used to keep track of who made a particular change. If you want to do this automatically, you can set the variable `cm-author` to an identifier. When this variable is set, its value is automatically added as a comment to every change you make, preceded by `@` (). If you explicitly make a comment with `C-c * c`, the value of `cm-author` is inserted at the beginning of the comment.
+Comments can be used to keep track of who made a particular change. If you want to do this automatically, you can set the variable `cm-author` to an identifier. When this variable is set, its value is automatically added as a comment to every change you make, preceded by `@`. If you explicitly make a comment with `C-c * c`, the value of `cm-author` is inserted at the beginning of the comment.
 
 The variable `cm-author` can be set globally through Customize (or with `setq-default` in your init file). This sets the global value. You can override this global value in a particular buffer by setting a buffer-local value. There are two ways to do this: you can use `C-c * C`, which will only set the value for the current session, or you can use a file-local (or directory-local) variable, which makes sure the value is set every time the file is loaded. (Note: if you use [Pandoc](http://johnmacfarlane.net/pandoc/), you can specify file-local variables with html comments, since Pandoc ignores html comments for all output format.)
 
