@@ -10,7 +10,7 @@ CriticMarkup is a way for authors and editors to track changes to documents in p
 - Comment {>> <<}
 - Highlight {{ }}{>> <<}
 
-Activating `cm-mode` provides key{--s--} {++bindings ++}to insert these {~~patterns~>markup tags~~} above and thus mark one's changes to the text. The provided {{key bindings}}{>>Should you mention that these are nicely mnemonic?<<} are:
+Activating `cm-mode` provides key{--s--} {++bindings ++}to insert these {~~patterns~>markup tags~~} and thus mark one's changes to the text. The provided {==key bindings==}{>>@jk Should you mention that these are nicely mnemonic?<<} are:
 
 - `C-c * a`: add text
 - `C-c * d`: delete text
@@ -66,3 +66,8 @@ To mitigate this problem, you can use soft wrap (with `visual-line-mode`). Since
 - Commands to accept or reject all changes in one go. {>>These won't be bound to keys, though.<<}
 - Do not combine two adjacent additions/deletions if the auto-comment is different.
 - Mouse support?
+
+
+## Sceenshot ##
+
+![Emacs CriticMarkup](Emacs_CriticMarkup.png)
