@@ -5,7 +5,7 @@
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 14 Feb 2013
-;; Version: 1.0
+;; Version: 1.0.1
 ;; Keywords: text, markdown
 
 ;; Redistribution and use in source and binary forms, with or without
