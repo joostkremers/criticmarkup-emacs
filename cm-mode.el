@@ -78,13 +78,6 @@
 ;; -----
 ;;
 ;; See README.md for details.
-;;
-;;
-;; TODO
-;; ----
-;;
-;; - Commands to accept or reject all changes in one go.
-;; - Mouse support?
 
 ;;; Code:
 
