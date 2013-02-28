@@ -2,7 +2,7 @@
 
 `cm-mode` is a minor mode that provides support for [CriticMarkup](http://criticmarkup.com/) in Emacs.
 
-CriticMarkup is a way for authors and editors to track changes to documents in plain text. It defines the following patterns for marking changes:
+CriticMarkup is a way for authors and editors to track changes to documents in plain text. It defines the following tags for marking changes:
 
 - Addition {++ ++}
 - Deletion {-- --}
@@ -10,7 +10,7 @@ CriticMarkup is a way for authors and editors to track changes to documents in p
 - Comment {>> <<}
 - Highlight {== ==}{>> <<}
 
-Activating `cm-mode` provides key bindings to insert these markup tags and thus mark one's changes to the text. The provided key bindingsare:
+Activating `cm-mode` provides key bindings to insert these markup tags and thus mark one's changes to the text. The provided key bindings are:
 
 - `C-c * a`: add text
 - `C-c * d`: delete text
@@ -53,7 +53,7 @@ You can interactively accept or reject all changes with `C-c * I` (that is a cap
 
 ## Font lock ##
 
-`cm-mode` also adds the markup patterns defined by CriticMarkup to `font-lock-keywords` and provides customisable faces to highlight them. The customisation group is called `criticmarkup`.
+`cm-mode` also adds the markup tags defined by CriticMarkup to `font-lock-keywords` and provides customisable faces to highlight them. The customisation group is called `criticmarkup`.
 
 You may notice that changes that span multiple lines are not highlighted. The reason for this is that multiline font lock in Emacs is not straightforward. There are ways to deal with this, but since `cm-mode` is a minor mode, it could interfere with the major mode's font locking mechanism if it did that. Besides, one is advised not to include newlines inside CriticMarkup tags anyway.
 
@@ -75,3 +75,5 @@ To mitigate this problem, you can use soft wrap (with `visual-line-mode`). Since
 ## Sceenshot ##
 
 ![Emacs CriticMarkup](Emacs_CriticMarkup.png)
+
+(Yes, I use a variable-width font in my Markdown buffers.)
