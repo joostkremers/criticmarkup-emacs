@@ -708,9 +708,9 @@ is NIL."
                                                 (capitalize (substring (symbol-name (car change)) 3)))
                                         '(?a ?r ?s ?q) t))
                      ((memq (car change) '(cm-comment cm-highlight))
-                      (read-char-choice (format "%s: (d)elete/(k)eep/(q)uit? "
+                      (read-char-choice (format "%s: (d)elete/(s)kip/(q)uit? "
                                                 (capitalize (substring (symbol-name (car change)) 3)))
-                                        '(?d ?k ?s ?q) t)))))
+                                        '(?d ?s ?q) t)))))
         (delete-overlay cm-current-markup-overlay)
         (when (and (not interactive) (eq action ?q)) ; if the user aborted
           (throw 'quit nil))                         ; get out
@@ -720,7 +720,7 @@ is NIL."
             (delete-region (third change) (fourth change))
             (insert (cm-substitution-string change action)))
           (point))
-         ((memq action '(?s ?k))
+         ((eq action ?s)
           (fourth change)))))))
 
 (defun cm-substitution-string (change action)

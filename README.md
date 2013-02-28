@@ -49,7 +49,7 @@ You can jump to the previous/next change with the commands `C-c * b` and `C-c * 
 
 You can interactively accept or reject a change by putting the cursor inside it and hitting `C-c * i`. For additions, deletions and substitutions, you get a choice between `a` to accept the change or `r` to reject it. There are two other choices, `s` to skip this change or `q` to quit, which both leave the change untouched. If you're just dealing with the change at point, they are essentially identical, but they have different functions when accepting or rejecting all changes interactively.
 
-For comments and highlights, the choices are different: `d` to delete the comment or highlight (whereby the latter of course retains the highlighted text, but the comment and the markup are removed), or `k` to keep the comment or highlight. Again `q` quits and is essentially identical to `k`. (Note that you can also use `s` instead of `k`, in case you get used to skipping changes that way.)
+For comments and highlights, the choices are different: `d` to delete the comment or highlight (whereby the latter of course retains the highlighted text, but the comment and the markup are removed), or `s` to skip the comment or highlight. Again `q` quits and is essentially identical to `s`.
 
 You can interactively accept or reject all changes with `C-c * I` (that is a capital `i`). This will go through each change asking you what you want to do with it. Here, `s` skips the current change and moves on to the next one, while typing `q` leaves the current change alone and quits the accept/reject session.
 
