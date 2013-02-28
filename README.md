@@ -19,6 +19,8 @@ Activating `cm-mode` provides key bindings to insert these markup tags and thus 
 
 The commands to delete or substitute text operate on the region. The command to insert a comment can be used with an active region, in which case the text in the region will be highlighted. It can also be used inside an existing markup to add a comment to it. If it is used anywhere else, it just adds a lone comment. The commands for inserting and substituting text and for inserting a comment all put point at the correct position, so you can start typing right away.
 
+The commands for adding and deleting text combine additions/deletions that are adjacent: if you make a new addition next to an existing one, the cursor is simply moved into the addition tag. Similarly, if you delete text adjacent to an existing deletion, the deleted text is moved into the tag.
+
 Note: the [CriticMarkup spec](http://criticmarkup.com/spec.php) says you should avoid putting newlines in CriticMarkup tags and you should always wrap Markdown tags completely. These are wise precautions for `cm-mode` as well.
 
 ## Follow changes mode ##
@@ -30,7 +32,9 @@ Note: the [CriticMarkup spec](http://criticmarkup.com/spec.php) says you should 
 
 Comments can be used to keep track of who made a particular change. If you want to do this automatically, you can set the variable `cm-author` to an identifier. When this variable is set, its value is automatically added as a comment to every change you make, preceded by `@`. If you explicitly make a comment with `C-c * c`, the value of `cm-author` is inserted at the beginning of the comment.
 
-The variable `cm-author` can be set globally through Customize (or with `setq-default` in your init file). This sets the global value. You can override this global value in a particular buffer by setting a buffer-local value. There are two ways to do this: you can use `C-c * C`, which will only set the value for the current session, or you can use a file-local (or directory-local) variable, which makes sure the value is set every time the file is loaded. (Note: if you use [Pandoc](http://johnmacfarlane.net/pandoc/), you can specify file-local variables with html comments, since Pandoc ignores html comments for all output format.)
+The variable `cm-author` can be set globally through Customize (or with `setq-default` in your init file). This sets the global value. You can override this global value in a particular buffer by setting a buffer-local value. There are two ways to do this: you can use `C-c * C`, which will only set the value for the current session, or you can use a file-local (or directory-local) variable, which makes sure the value is set every time the file is loaded. (Note: if you use [Pandoc](http://johnmacfarlane.net/pandoc/), you can specify file-local variables with html comments, since Pandoc ignores html comments for all output formats.)
+
+If `cm-author` is set, a new addition or deletion that is adjacent to an existing one is not combined with it if it has a different author tag. This way you can add changes to a text that already has changes from another author and still keep track of who did what. Note that this *only* works for changes that have a comment with an author tag. If the existing addition/deletion does not have an author tag, any addition/deletion made adjacent to it is simply combined with it.
 
 
 ## Navigating changes ##

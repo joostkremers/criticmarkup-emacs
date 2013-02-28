@@ -54,6 +54,7 @@
 ;; - key bindings to insert CriticMarkup.
 ;; - 'follow changes' mode: automatically record changes to the buffer.
 ;; - accept/reject changes interactively.
+;; - automatically add author tag.
 ;; - navigation to move between changes.
 ;;
 ;;
@@ -83,8 +84,6 @@
 ;; ----
 ;;
 ;; - Commands to accept or reject all changes in one go.
-;; - Do not combine two adjacent additions/deletions if the author is
-;;   different.
 ;; - Mouse support?
 
 ;;; Code:
@@ -346,10 +345,13 @@ combined with it, even if point is right outside it. (That avoids
 having two additions adjacent to each other.) If it is another
 kind of markup, and point is inside the curly braces, we make
 sure point is not in the delimiter before adding text."
-  (unless (or (cm-addition-p (cm-expand-change change))
-              (cm-point-inside-change-p change))
-    (cm-insert-markup 'cm-addition))
-  (cm-move-into-markup 'cm-addition))
+  (setq change (cm-expand-change change))
+  (if (or (cm-point-inside-change-p change)
+              (and (cm-addition-p change)
+                   (cm-has-current-author-p change)))
+      (cm-move-into-markup 'cm-addition)
+    (cm-insert-markup 'cm-addition)
+    (cm-move-into-markup 'cm-addition t)))
 
 (defun cm-make-deletion (text &optional backspace)
   "Reinsert TEXT into the buffer and add deletion markup if necessary.
@@ -359,10 +361,11 @@ If BACKSPACE is T, the deletion was done with the backspace key;
 point will then be left before the deletion markup."
   ;; TODO: we should check whether the text to be deleted contains part of
   ;; a change.
-  (let ((change (cm-markup-at-point)))
+  (let ((change (cm-expand-change (cm-markup-at-point))))
     (unless (cm-point-inside-change-p change)
       (save-excursion
-        (if (not (cm-deletion-p (cm-expand-change change)))
+        (if (not (and (cm-deletion-p change)
+                      (cm-has-current-author-p change)))
             (cm-insert-markup 'cm-deletion text)
           (cm-move-into-markup 'cm-deletion)
           (insert text)))
@@ -471,13 +474,16 @@ delimiter, do not move. Return T if point has moved."
                                len))))
     (/= pos (point))))
 
-(defun cm-move-into-markup (type)
+(defun cm-move-into-markup (type &optional backwards)
   "Make sure point is inside the delimiters of TYPE.
 Point is either moved forward if at an opening delimiter or
 backward if at a closing delimiter. When moving backward, point
 is moved past a comment if the change before the comment is of
-TYPE."
-  (unless (cm-move-past-delim (second (assq type cm-delimiters)))
+TYPE.
+
+If BACKWARDS is T, only try moving backwards."
+  (unless (and (not backwards)
+               (cm-move-past-delim (second (assq type cm-delimiters))))
     (if (and (not (eq type 'cm-comment))
              (cm-comment-p (cm-markup-at-point t)))
         (cm-forward-markup 'cm-comment -1))
@@ -630,6 +636,35 @@ outside of them. The latter counts as being AT a change."
   (and change ; if there *is* no change, we're not inside one...
        (> (point) (third change))
        (< (point) (fourth change))))
+
+(defun cm-extract-comment (change)
+  "Extract the comment from CHANGE."
+  (let ((bdelim (regexp-quote (second (assq 'cm-comment cm-delimiters))))
+        (edelim (regexp-quote (third (assq 'cm-comment cm-delimiters))))
+        (text (second change)))
+    (if (string-match (concat bdelim "\\(.*?\\)" edelim) text)
+        (match-string 1 text))))
+
+(defun cm-extract-author (change)
+  "Extract the author tag of CHANGE.
+The author tag should start with an `@' sign, should not contain
+any spaces and should be at the start of the comment part of
+CHANGE. The return value is the author tag without `@', or NIL if
+CHANGE has no comment part or a comment without an author."
+  (let ((comment (cm-extract-comment change)))
+    (if (and comment
+             (string-match "^@\\([^[:space:]]*\\).*?$" comment))
+        (match-string 1 comment))))
+
+(defun cm-has-current-author-p (change)
+  "Return T if the user is the author of CHANGE.
+The user is considered the author of CHANGE if the author tag of
+CHANGE matches `cm-author'; if CHANGE has no author; or if
+`cm-author' is NIL."
+  (let ((author (cm-extract-author change)))
+    (or (not cm-author)
+        (not author)
+        (string= author cm-author))))
 
 (defun cm-expand-change (change)
   "Expand CHANGE with a following comment or, if a comment, with a preceding change.
