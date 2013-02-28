@@ -186,6 +186,13 @@ flag to indicate this. (Though they should actually use the macro
 (defvar cm-highlight-face 'cm-highlight-face
   "CriticMarkup highlight face.")
 
+;; create markup predicates
+(mapc #'(lambda (markup)
+          (fset (intern (concat (symbol-name markup) "-p"))
+                `(lambda (change)
+                   (eq (car change) (quote ,markup)))))
+      (mapcar #'car cm-delimiters))
+
 (defvar cm-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-c*a" 'cm-addition)
@@ -316,7 +323,7 @@ addition can be made."
   (interactive)
   (let ((change (cm-markup-at-point)))
     (if (or (not (cm-point-inside-change-p change))
-            (eq (car change) 'cm-addition))
+            (cm-addition-p change))
         (cm-without-following-changes
           (cm-make-addition change))
       (error "Cannot make an addition here"))))
@@ -339,7 +346,7 @@ combined with it, even if point is right outside it. (That avoids
 having two additions adjacent to each other.) If it is another
 kind of markup, and point is inside the curly braces, we make
 sure point is not in the delimiter before adding text."
-  (unless (or (eq (car (cm-expand-change change)) 'cm-addition)
+  (unless (or (cm-addition-p (cm-expand-change change))
               (cm-point-inside-change-p change))
     (cm-insert-markup 'cm-addition))
   (cm-move-into-markup 'cm-addition))
@@ -355,7 +362,7 @@ point will then be left before the deletion markup."
   (let ((change (cm-markup-at-point)))
     (unless (cm-point-inside-change-p change)
       (save-excursion
-        (if (not (eq (car (cm-expand-change change)) 'cm-deletion))
+        (if (not (cm-deletion-p (cm-expand-change change)))
             (cm-insert-markup 'cm-deletion text)
           (cm-move-into-markup 'cm-deletion)
           (insert text)))
@@ -472,7 +479,7 @@ is moved past a comment if the change before the comment is of
 TYPE."
   (unless (cm-move-past-delim (second (assq type cm-delimiters)))
     (if (and (not (eq type 'cm-comment))
-             (eq (car (cm-markup-at-point t)) 'cm-comment))
+             (cm-comment-p (cm-markup-at-point t)))
         (cm-forward-markup 'cm-comment -1))
     (cm-move-past-delim (third (assq type cm-delimiters)) t)))
 
@@ -631,7 +638,7 @@ it; if so, include it and change the type accordingly. If CHANGE
 is of any other type, check if there's a commend and include it."
   (unless (not change)
     (cond
-     ((eq (car change) 'cm-comment)
+     ((cm-comment-p change)
       (save-excursion
         (cm-beginning-of-comment)
         (backward-char 3)               ; hard-coded adjustment of point
@@ -643,7 +650,7 @@ is of any other type, check if there's a commend and include it."
           (cm-end-of-markup (car change))
           (forward-char 3)              ; hard-coded adjustment of point
           (let ((comment (cm-markup-at-point)))
-            (if (eq (car comment) 'cm-comment)
+            (if (cm-comment-p comment)
                 (list (car change) (concat (second change) (second comment)) (third change) (fourth comment))
               change)))))))
 
