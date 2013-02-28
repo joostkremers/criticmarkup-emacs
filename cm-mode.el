@@ -202,7 +202,7 @@ it is added automatically."
     (define-key map "\C-c**" 'cm-forward-out-of-change)
     (define-key map "\C-c*f" 'cm-forward-change)
     (define-key map "\C-c*b" 'cm-backward-change)
-    (define-key map "\C-c*C" 'cm-set-author)
+    (define-key map "\C-c*t" 'cm-set-author)
     (define-key map "\C-c*F" 'cm-follow-changes)
     map)
   "Keymap for cm-mode.")
