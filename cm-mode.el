@@ -391,18 +391,20 @@ If point is in an existing change, the comment is added after it."
   (cm-without-following-changes
     (let ((change (cm-markup-at-point))
           text)
-      (cond
-       (change
-        (deactivate-mark)               ; we don't want the region active
-        (cm-end-of-markup (car change)))
-       ;; note: we do not account for the possibility that the region
-       ;; contains a change but point is outside of it...
-       ((use-region-p)
-        (setq text (delete-and-extract-region beg end))))
-      (if text
-          (cm-insert-markup 'cm-highlight text)
-        (cm-insert-markup 'cm-comment))
-      (cm-move-into-markup 'cm-comment))))
+      (if (or (cm-comment-p change)
+              (cm-highlight-p change))
+          (error "Cannot make a comment here")
+        (cond
+         (change
+          (cm-end-of-markup (car change)))
+         ;; note: we do not account for the possibility that the region
+         ;; contains a change but point is outside of it...
+         ((use-region-p)
+          (setq text (delete-and-extract-region beg end))))
+        (if text
+            (cm-insert-markup 'cm-highlight text)
+          (cm-insert-markup 'cm-comment))
+        (cm-move-into-markup 'cm-comment)))))
 
 (defun cm-point-at-delim (delim &optional end strict)
   "Return non-NIL if point is at a delimiter.
