@@ -93,6 +93,7 @@
 
 (defvar cm-follow-changes nil
   "Flag indicating whether follow changes mode is active.")
+(make-variable-buffer-local 'cm-follow-changes)
 
 (defvar cm-current-deletion nil
   "The deleted text in follow changes mode.
