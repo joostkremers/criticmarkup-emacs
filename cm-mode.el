@@ -136,7 +136,12 @@ flag to indicate this. (Though they should actually use the macro
   :group 'criticmarkup)
 
 (defcustom cm-author nil
-  "*Comment that is automatically inserted when marking a change."
+  "*Author tag.
+If set, each change is automatically marked with a comment
+containing this tag.
+
+The tag should not contain spaces. Do not include the `@' sign,
+it is added automatically."
   :group 'criticmarkup
   :safe 'stringp
   :type '(choice (const :tag "None" nil)
