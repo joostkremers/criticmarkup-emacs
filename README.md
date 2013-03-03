@@ -26,7 +26,7 @@ Note: the [CriticMarkup spec](http://criticmarkup.com/spec.php) says you should 
 
 ## Follow changes mode ##
 
-`cm-mode` also provides a simple 'follow changes' mode. When activated, changes you make to the buffer are automatically marked as insertions or deletions. Substitutions cannot be made automatically (that is, if you mark a word, delete it and then type a replacement, it will still be marked as a sequence of deletion+insertion, not as a substitution), but they can still be made manually with `C-c * s`. You can activate and deactivate follow changes mode with `C-c * F`. When it's active, the modeline indicator for `cm-mode` changes from `cm` to `cm*`. 
+`cm-mode` also provides a simple 'follow changes' mode. When activated, changes you make to the buffer are automatically marked as insertions or deletions. Substitutions cannot be made automatically (that is, if you mark a word, delete it and then type a replacement, it will still be marked as a sequence of deletion+insertion, not as a substitution), but they can still be made manually with `C-c * s`. You can activate and deactivate follow changes mode with `C-c * F`. When it's active, the modeline indicator for `cm-mode` changes from `CM` to `CM*`. 
 
 
 ## Keeping track of the author ##
@@ -37,7 +37,7 @@ The variable `cm-author` can be set through Customize or with `setq-default` in 
 
 If `cm-author` is set, a new addition or deletion that is adjacent to an existing one is not combined with it if it has a different author tag. This way you can add changes to a text that already has changes from another author and still keep track of who did what. This *only* works for changes that have a comment with an author tag, however. If the existing addition/deletion does not have an author tag, any addition/deletion made adjacent to it is simply combined with it.
 
-Note that the modeline shows the buffer's author tag: if `cm-author` is set, the modeline indicator for `cm-mode` takes the form `cm@<tag>`.
+Note that the modeline shows the buffer's author tag: if `cm-author` is set, the modeline indicator for `cm-mode` takes the form `CM@<tag>`.
 
 
 ## Navigating changes ##

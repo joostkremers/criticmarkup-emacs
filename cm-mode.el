@@ -210,7 +210,7 @@ it is added automatically."
 ;;;###autoload
 (define-minor-mode cm-mode
   "Minor mode for CriticMarkup."
-  :init-value nil :lighter (:eval (concat " cm" (if cm-author (concat "@" cm-author)) (if cm-follow-changes "*"))) :global nil
+  :init-value nil :lighter (:eval (concat " CM" (if cm-author (concat "@" cm-author)) (if cm-follow-changes "*"))) :global nil
   (cond
    (cm-mode                             ; cm-mode is turned on
     (font-lock-add-keywords nil `((,cm-addition-regexp . cm-addition-face)
