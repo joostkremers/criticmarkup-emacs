@@ -213,19 +213,19 @@ it is added automatically."
   :init-value nil :lighter (:eval (concat " CM" (if cm-author (concat "@" cm-author)) (if cm-follow-changes "*"))) :global nil
   (cond
    (cm-mode                             ; cm-mode is turned on
-    (font-lock-add-keywords nil `((,cm-addition-regexp . cm-addition-face)
-                                  (,cm-deletion-regexp . cm-deletion-face)
-                                  (,cm-substitution-regexp . cm-substitution-face)
-                                  (,cm-comment-regexp . cm-comment-face)
-                                  (,cm-highlight-regexp . cm-highlight-face)) t)
+    (font-lock-add-keywords nil `((,cm-addition-regexp 0 cm-addition-face prepend)
+                                  (,cm-deletion-regexp 0 cm-deletion-face prepend)
+                                  (,cm-substitution-regexp 0 cm-substitution-face prepend)
+                                  (,cm-comment-regexp 0 cm-comment-face prepend)
+                                  (,cm-highlight-regexp 0 cm-highlight-face prepend)) t)
     (setq cm-current-markup-overlay (make-overlay 1 1))
     (overlay-put cm-current-markup-overlay 'face 'highlight))
    ((not cm-mode)                       ; cm-mode is turned off
-    (font-lock-remove-keywords nil `((,cm-addition-regexp . cm-addition-face)
-                                     (,cm-deletion-regexp . cm-deletion-face)
-                                     (,cm-substitution-regexp . cm-substitution-face)
-                                     (,cm-comment-regexp . cm-comment-face)
-                                     (,cm-highlight-regexp . cm-highlight-face)))
+    (font-lock-remove-keywords nil `((,cm-addition-regexp 0 cm-addition-face prepend)
+                                     (,cm-deletion-regexp 0 cm-deletion-face prepend)
+                                     (,cm-substitution-regexp 0 cm-substitution-face prepend)
+                                     (,cm-comment-regexp 0 cm-comment-face prepend)
+                                     (,cm-highlight-regexp 0 cm-highlight-face prepend)))
     (remove-overlays))))
 
 (defun cm-follow-changes (&optional arg)
