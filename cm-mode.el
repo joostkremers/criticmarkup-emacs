@@ -84,6 +84,10 @@
 (require 'thingatpt)
 (require 'cl-macs)
 
+(defmacro cm-last1 (list)
+  "Return the last element of LIST."
+  `(car (last ,list)))
+
 (defvar cm-follow-changes nil
   "Flag indicating whether follow changes mode is active.")
 (make-variable-buffer-local 'cm-follow-changes)
@@ -180,7 +184,7 @@ it is added automatically."
 (eval-and-compile
   (defvar cm-delimiters '((cm-addition "{++" "++}")
                           (cm-deletion "{--" "--}")
-                          (cm-substitution "{~~" "~~}")
+                          (cm-substitution "{~~" "~>" "~~}")
                           (cm-comment "{>>" "<<}")
                           (cm-highlight "{==" "==}"))
     "CriticMarkup Delimiters."))
@@ -442,7 +446,7 @@ type."
   (or n (setq n 1))
   (cond
    ((> n 0)                             ; moving forward
-    (let ((delim (third (assq type cm-delimiters))))
+    (let ((delim (cm-last1 (assq type cm-delimiters))))
       (backward-char (- (length delim) (or (cm-point-at-delim delim t t)
                                            (length delim)))) ; adjust point if it's inside a delim
       (re-search-forward (regexp-quote delim) nil t n)))
@@ -461,7 +465,7 @@ type."
 (defun cm-end-of-markup (type)
   "Move to the end of a markup of TYPE."
   ;; first move out of the delimiter, if we're in one.
-  (cm-move-past-delim (third (assq type cm-delimiters)) t)
+  (cm-move-past-delim (cm-last1 (assq type cm-delimiters)) t)
   (cm-forward-markup type))
 
 (defun cm-move-past-delim (delim &optional end)
@@ -490,7 +494,7 @@ If BACKWARDS is T, only try moving backwards."
     (if (and (not (eq type 'cm-comment))
              (cm-comment-p (cm-markup-at-point t)))
         (cm-forward-markup 'cm-comment -1))
-    (cm-move-past-delim (third (assq type cm-delimiters)) t)))
+    (cm-move-past-delim (cm-last1 (assq type cm-delimiters)) t)))
 
 (defun cm-forward-addition (&optional n)
   "Move forward N addition markups.
@@ -643,7 +647,7 @@ outside of them. The latter counts as being AT a change."
 (defun cm-extract-comment (change)
   "Extract the comment from CHANGE."
   (let ((bdelim (regexp-quote (second (assq 'cm-comment cm-delimiters))))
-        (edelim (regexp-quote (third (assq 'cm-comment cm-delimiters))))
+        (edelim (regexp-quote (cm-last1 (assq 'cm-comment cm-delimiters))))
         (text (second change)))
     (if (string-match (concat bdelim "\\(.*?\\)" edelim) text)
         (match-string 1 text))))
