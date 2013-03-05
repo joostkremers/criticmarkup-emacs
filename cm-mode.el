@@ -187,7 +187,7 @@ it is added automatically."
                           (cm-substitution "{~~" "~>" "~~}")
                           (cm-comment "{>>" "<<}")
                           (cm-highlight "{==" "==}"))
-    "CriticMarkup Delimiters."))
+    "CriticMarkup delimiters."))
 
 ;; create markup predicates
 (eval-and-compile
