@@ -84,13 +84,6 @@
 (require 'thingatpt)
 (require 'cl-macs)
 
-(defvar cm-delimiters '((cm-addition "{++" "++}")
-                        (cm-deletion "{--" "--}")
-                        (cm-substitution "{~~" "~~}")
-                        (cm-comment "{>>" "<<}")
-                        (cm-highlight "{==" "==}"))
-  "CriticMarkup Delimiters.")
-
 (defvar cm-follow-changes nil
   "Flag indicating whether follow changes mode is active.")
 (make-variable-buffer-local 'cm-follow-changes)
@@ -184,12 +177,21 @@ it is added automatically."
 (defvar cm-highlight-face 'cm-highlight-face
   "CriticMarkup highlight face.")
 
+(eval-and-compile
+  (defvar cm-delimiters '((cm-addition "{++" "++}")
+                          (cm-deletion "{--" "--}")
+                          (cm-substitution "{~~" "~~}")
+                          (cm-comment "{>>" "<<}")
+                          (cm-highlight "{==" "==}"))
+    "CriticMarkup Delimiters."))
+
 ;; create markup predicates
-(mapc #'(lambda (markup)
-          (fset (intern (concat (symbol-name markup) "-p"))
-                `(lambda (change)
-                   (eq (car change) (quote ,markup)))))
-      (mapcar #'car cm-delimiters))
+(eval-and-compile
+  (mapc #'(lambda (markup)
+            (fset (intern (concat (symbol-name markup) "-p"))
+                  `(lambda (change)
+                     (eq (car change) (quote ,markup)))))
+        (mapcar #'car cm-delimiters)))
 
 (defvar cm-mode-map
   (let ((map (make-sparse-keymap)))
