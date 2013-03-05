@@ -294,13 +294,16 @@ preceded with `@`.
 
 If TYPE is 'cm-highlight, a comment is added, which optionally
 starts with `cm-author'."
-  (multiple-value-bind (bdelim edelim) (cdr (assq type cm-delimiters))
+  (let* ((delims (cdr (assq type cm-delimiters)))
+         (bdelim (first delims))
+         (middle (if (third delims) (second delims))) ; "~>" for cm-substitution, otherwise nil
+         (edelim (cm-last1 delims)))
     (insert (or bdelim "")
             (or text (if (and (eq type 'cm-comment)
                               cm-author)
                          (concat "@" cm-author " ")
                        ""))
-            (if (eq type 'cm-substitution) "~>" "")
+            (or middle "")
             (or edelim "")))
   (if (and (not (eq type 'cm-comment))
            (or cm-author (eq type 'cm-highlight)))
