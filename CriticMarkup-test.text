@@ -12,7 +12,7 @@ CriticMarkup is a way for authors and editors to track changes to documents in p
 
 Activating `cm-mode` provides key{--s--} {++bindings ++}to insert these {~~patterns~>markup tags~~} and thus mark one's changes to the text. The provided {==key bindings==}{>>@jk Should I mention that these are nicely mnemonic?<<} are:
 
-- `C-c * a`: add text
+- `C-c * i`: add text
 - `C-c * d`: delete text
 - `C-c * s`: substitute text
 - `C-c * c`: insert a comment (possibly with highlight)
@@ -24,7 +24,7 @@ Note: the [CriticMarkup spec](http://criticmarkup.com/spec.php) says you should 
 
 ## Follow changes mode ##
 
-`cm-mode` also provides a simple 'follow changes' mode. When activated, changes you make to the buffer are automatically marked as insertions or deletions. Substitutions cannot be made automatically (that is, if you mark a word, delete it and then type a replacement, it will still be marked as a sequence of deletion+insertion, not as a substitution), but they can still be made manually with `C-c * s`. You can activate and deactivate follow changes mode with `C-c * F`. When it's active, the modeline indicator for `cm-mode` changes from `cm` to `cm*`. 
+`cm-mode` also provides a simple 'follow changes' mode. When activated, changes you make to the buffer are automatically marked as insertions or deletions. Substitutions cannot be made automatically (that is, if you mark a word, delete it and then type a replacement, it will still be marked as a sequence of deletion+insertion, not as a substitution), but they can still be made manually with `C-c * s`. You can activate and deactivate follow changes mode with `C-c * F`. When it's active, the modeline indicator for `cm-mode` changes from {--`cm`--}{++`CM`++} to {~~`cm*`~>`CM*`~~}. 
 
 
 ## Keeping track of the author ##
