@@ -84,9 +84,9 @@
 (require 'thingatpt)
 (require 'cl-macs)
 
-(defmacro cm-last1 (list)
+(defun cm-last1 (list)
   "Return the last element of LIST."
-  `(car (last ,list)))
+  (car (last list)))
 
 (defvar cm-follow-changes nil
   "Flag indicating whether follow changes mode is active.")
