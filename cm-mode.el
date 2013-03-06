@@ -270,11 +270,11 @@ it is added automatically."
 ;;   nil
 ;;   (0 '(face default rear-nonsticky (read-only)))))
 ;;
-;; This does some nice magic: it adds cm-addition-face to addition markups,
-;; it makes the tags themselves, `{++' and `++}' read-only, and it gives
-;; the last character of the tags the text property (rear-nonsticky
-;; (read-only)), so that it's possible to add characters after the tag.
-;;
+;; This does some nice magic: it highlight cm-addition-face to addition
+;; markups, it makes the tags themselves, `{++' and `++}', read-only, and
+;; it gives the last character of the tags the text property
+;; (rear-nonsticky (read-only)), so that it's possible to add characters
+;; after the tag.
 
 (defun cm-font-lock-keywords ()
   "Return a list of font lock keywords."
