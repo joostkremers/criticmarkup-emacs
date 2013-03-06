@@ -244,7 +244,7 @@ it is added automatically."
                                            (regexp-opt (list elt) t))
                                        markup
                                        ".*?"))
-    (add-to-list 'font-lock `(0 ,face) t) ; the highlighter for the entire change
+    (add-to-list 'font-lock `(0 ,face prepend) t) ; the highlighter for the entire change
     (dotimes (n (length markup))
       (add-to-list 'font-lock `(,(1+ n) '(face ,face read-only t)) t) ; make the tags read-only
       (add-to-list 'font-lock `("." (progn ; and make the read-only property of the final character rear-nonsticky
