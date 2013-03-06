@@ -228,7 +228,10 @@ it is added automatically."
    ((not cm-mode)                       ; cm-mode is turned off
     (font-lock-remove-keywords nil (cm-font-lock-keywords))
     (setq font-lock-extra-managed-props (delq 'read-only (delq 'rear-nonsticky font-lock-extra-managed-props)))
-    (cm-make-markups-writable) ; we need to remove the read-only property by hand; it's cumbersome to do it with font-lock
+    (let ((modified (buffer-modified-p)))
+      (cm-make-markups-writable) ; we need to remove the read-only property by hand; it's cumbersome to do it with font-lock
+      (unless modified
+        (set-buffer-modified-p nil)))   ; removing text properties marks the buffer as modified, so we may need to adjust
     (font-lock-fontify-buffer) ; usually sufficient to make the fontifications disappear immediately
     (remove-overlays))))
 
