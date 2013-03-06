@@ -238,19 +238,20 @@ it is added automatically."
 (defun cm-font-lock-for-markup (type)
   "Create a font lock entry for markup TYPE."
   (let ((markup (cdr type))
+        (face (intern (concat (symbol-name (car type)) "-face")))
         font-lock)
     (add-to-list 'font-lock (mapconcat #'(lambda (elt) ; first we create the regexp to match
                                            (regexp-opt (list elt) t))
                                        markup
                                        ".*?"))
-    (add-to-list 'font-lock `(0 ,(intern (concat (symbol-name (car type)) "-face"))) t) ; the highlighter for the entire change
+    (add-to-list 'font-lock `(0 ,face) t) ; the highlighter for the entire change
     (dotimes (n (length markup))
-      (add-to-list 'font-lock `(,(1+ n) '(face default read-only t)) t) ; make the tags read-only
+      (add-to-list 'font-lock `(,(1+ n) '(face ,face read-only t)) t) ; make the tags read-only
       (add-to-list 'font-lock `("." (progn ; and make the read-only property of the final character rear-nonsticky
                                       (goto-char (1- (match-end ,(1+ n))))
                                       (1+ (point)))
                                 nil
-                                (0 '(face default rear-nonsticky (read-only)))) t))
+                                (0 '(face ,face rear-nonsticky (read-only)))) t))
     font-lock))
 
 ;; `cm-font-lock-for-markup' produces a font-lock entry that can be given
@@ -259,16 +260,16 @@ it is added automatically."
 ;; 
 ;; ("\\({\\+\\+\\).*?\\(\\+\\+}\\)"
 ;;  (0 cm-addition-face)
-;;  (1 '(face default read-only t))
+;;  (1 '(face cm-addition-face read-only t))
 ;;  ("." (progn (goto-char (1- (match-end 1)))
 ;;              (1+ (point)))
 ;;   nil
-;;   (0 '(face default rear-nonsticky (read-only))))
-;;  (2 '(face default read-only t))
+;;   (0 '(face cm-addition-face rear-nonsticky (read-only))))
+;;  (2 '(face cm-addition-face read-only t))
 ;;  ("." (progn (goto-char (1- (match-end 2)))
 ;;              (1+ (point)))
 ;;   nil
-;;   (0 '(face default rear-nonsticky (read-only)))))
+;;   (0 '(face cm-addition-face rear-nonsticky (read-only)))))
 ;;
 ;; This does some nice magic: it highlight cm-addition-face to addition
 ;; markups, it makes the tags themselves, `{++' and `++}', read-only, and
