@@ -12,7 +12,7 @@ CriticMarkup is a way for authors and editors to track changes to documents in p
 
 Activating `cm-mode` provides key{--s--} {++bindings ++}to insert these {~~patterns~>markup tags~~} and thus mark one's changes to the text. The provided {==key bindings==}{>>@jk Should I mention that these are nicely mnemonic?<<} are:
 
-- `C-c * i`: add text
+- `C-c * a`: add text
 - `C-c * d`: delete text
 - `C-c * s`: substitute text
 - `C-c * c`: insert a comment (possibly with highlight)
