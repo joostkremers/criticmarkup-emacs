@@ -72,7 +72,6 @@ You can interactively accept or reject all changes with `C-c * I` (that is a cap
 ## TODO ##
 
 - Commands to accept or reject all changes in one go. (These won't be bound to keys, though.)
-- Make tags read-only.
 - Automatic generation of time/date stamp in comments.
 - Mouse support?
 
