@@ -24,10 +24,20 @@ The commands for adding and deleting text combine additions/deletions that are a
 Note: the [CriticMarkup spec](http://criticmarkup.com/spec.php) says you should avoid putting newlines in CriticMarkup tags and you should always wrap Markdown tags completely. These are wise precautions for `cm-mode` as well.
 
 
+## Font lock ##
+
+`cm-mode` also adds the markup tags defined by CriticMarkup to `font-lock-keywords` and provides customisable faces to highlight them. The customisation group is called `criticmarkup-faces`. Note that `cm-mode` also makes the markup tags read-only so that you cannot inadvertently modify them.
+
+You may notice that changes that span multiple lines are not highlighted. The reason for this is that multiline font lock in Emacs is not straightforward. There are ways to deal with this, but since `cm-mode` is a minor mode, it could interfere with the major mode's font locking mechanism if it did that. Besides, one is advised not to include newlines inside CriticMarkup tags anyway.
+
+To mitigate this problem, you can use soft wrap (with `visual-line-mode`). Since each paragraph is then essentially a single line, font lock works even across multiple (visual) lines.
+
+
 ## Follow changes mode ##
 
 `cm-mode` also provides a simple 'follow changes' mode. When activated, changes you make to the buffer are automatically marked as insertions or deletions. Substitutions cannot be made automatically (that is, if you mark a word, delete it and then type a replacement, it will still be marked as a sequence of deletion+insertion, not as a substitution), but they can still be made manually with `C-c * s`. You can activate and deactivate follow changes mode with `C-c * F`. When it's active, the modeline indicator for `cm-mode` changes from `CM` to `CM*`. 
 
+Note that some changes are not (properly) recorded. For example, capitalizing, downcasing or upcasing a word with `M-c` / `M-l` / `M-u` leaves a deletion markup but no addition markup. Similar problems may occur with other editing commands.
 
 ## Keeping track of the author ##
 
@@ -52,15 +62,6 @@ You can interactively accept or reject a change by putting the cursor inside it 
 For comments and highlights, the choices are different: `d` to delete the comment or highlight (whereby the latter of course retains the highlighted text, but the comment and the markup are removed), or `s` to skip the comment or highlight. Again `q` quits and is essentially identical to `s`.
 
 You can interactively accept or reject all changes with `C-c * I` (that is a capital `i`). This will go through each change asking you what you want to do with it. Here, `s` skips the current change and moves on to the next one, while typing `q` leaves the current change alone and quits the accept/reject session.
-
-
-## Font lock ##
-
-`cm-mode` also adds the markup tags defined by CriticMarkup to `font-lock-keywords` and provides customisable faces to highlight them. The customisation group is called `criticmarkup-faces`. Note that `cm-mode` also makes the markup tags read-only so that you cannot inadvertently modify them.
-
-You may notice that changes that span multiple lines are not highlighted. The reason for this is that multiline font lock in Emacs is not straightforward. There are ways to deal with this, but since `cm-mode` is a minor mode, it could interfere with the major mode's font locking mechanism if it did that. Besides, one is advised not to include newlines inside CriticMarkup tags anyway.
-
-To mitigate this problem, you can use soft wrap (with `visual-line-mode`). Since each paragraph is then essentially a single line, font lock works even across multiple (visual) lines.
 
 
 ## Disclaimer ##
