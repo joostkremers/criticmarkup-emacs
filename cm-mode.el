@@ -219,20 +219,63 @@ it is added automatically."
   :init-value nil :lighter (:eval (concat " CM" (if cm-author (concat "@" cm-author)) (if cm-follow-changes "*"))) :global nil
   (cond
    (cm-mode                             ; cm-mode is turned on
-    (font-lock-add-keywords nil `((,cm-addition-regexp 0 cm-addition-face prepend)
-                                  (,cm-deletion-regexp 0 cm-deletion-face prepend)
-                                  (,cm-substitution-regexp 0 cm-substitution-face prepend)
-                                  (,cm-comment-regexp 0 cm-comment-face prepend)
-                                  (,cm-highlight-regexp 0 cm-highlight-face prepend)) t)
+    (font-lock-add-keywords nil (cm-font-lock-keywords) t)
+    (add-to-list 'font-lock-extra-managed-props 'read-only)
+    (add-to-list 'font-lock-extra-managed-props 'rear-nonsticky)
+    (font-lock-fontify-buffer) ; usually sufficient to make the fontifications appear immediately
     (setq cm-current-markup-overlay (make-overlay 1 1))
     (overlay-put cm-current-markup-overlay 'face 'highlight))
    ((not cm-mode)                       ; cm-mode is turned off
-    (font-lock-remove-keywords nil `((,cm-addition-regexp 0 cm-addition-face prepend)
-                                     (,cm-deletion-regexp 0 cm-deletion-face prepend)
-                                     (,cm-substitution-regexp 0 cm-substitution-face prepend)
-                                     (,cm-comment-regexp 0 cm-comment-face prepend)
-                                     (,cm-highlight-regexp 0 cm-highlight-face prepend)))
+    (font-lock-remove-keywords nil (cm-font-lock-keywords))
+    (setq font-lock-extra-managed-props (delq 'read-only (delq 'rear-nonsticky font-lock-extra-managed-props)))
+    (cm-make-markups-writable) ; we need to remove the read-only property by hand; it's cumbersome to do it with font-lock
+    (font-lock-fontify-buffer) ; usually sufficient to make the fontifications disappear immediately
     (remove-overlays))))
+
+(defun cm-font-lock-for-markup (type)
+  "Create a font lock entry for markup TYPE."
+  (let ((markup (cdr type))
+        font-lock)
+    (add-to-list 'font-lock (mapconcat #'(lambda (elt) ; first we create the regexp to match
+                                           (regexp-opt (list elt) t))
+                                       markup
+                                       ".*?"))
+    (add-to-list 'font-lock `(0 ,(intern (concat (symbol-name (car type)) "-face"))) t) ; the highlighter for the entire change
+    (dotimes (n (length markup))
+      (add-to-list 'font-lock `(,(1+ n) '(face default read-only t)) t) ; make the tags read-only
+      (add-to-list 'font-lock `("." (progn ; and make the read-only property of the final character rear-nonsticky
+                                      (goto-char (1- (match-end ,(1+ n))))
+                                      (1+ (point)))
+                                nil
+                                (0 '(face default rear-nonsticky (read-only)))) t))
+    font-lock))
+
+;; `cm-font-lock-for-markup' produces a font-lock entry that can be given
+;; to `font-lock-add-keywords'. To illustrate, the entry it produces for
+;; additions is the following:
+;; 
+;; ("\\({\\+\\+\\).*?\\(\\+\\+}\\)"
+;;  (0 cm-addition-face)
+;;  (1 '(face default read-only t))
+;;  ("." (progn (goto-char (1- (match-end 1)))
+;;              (1+ (point)))
+;;   nil
+;;   (0 '(face default rear-nonsticky (read-only))))
+;;  (2 '(face default read-only t))
+;;  ("." (progn (goto-char (1- (match-end 2)))
+;;              (1+ (point)))
+;;   nil
+;;   (0 '(face default rear-nonsticky (read-only)))))
+;;
+;; This does some nice magic: it adds cm-addition-face to addition markups,
+;; it makes the tags themselves, `{++' and `++}' read-only, and it gives
+;; the last character of the tags the text property (rear-nonsticky
+;; (read-only)), so that it's possible to add characters after the tag.
+;;
+
+(defun cm-font-lock-keywords ()
+  "Return a list of font lock keywords."
+  (mapcar #'cm-font-lock-for-markup cm-delimiters))
 
 (defun cm-follow-changes (&optional arg)
   "Record changes."
@@ -282,6 +325,20 @@ details."
   "Do not record changes with CriticMarkup."
   (cm-without-following-changes
     ad-do-it))
+
+(defun cm-make-markups-writable ()
+  "Make all CM markup delimiters in the current buffer writable."
+  (save-excursion
+    (goto-char (point-min))
+    (let ((delims-regexp (concat (regexp-opt (mapcar #'second cm-delimiters) t)
+                                 ".*?"
+                                 "\\(?:\\(~>\\).*?\\)?"
+                                 (regexp-opt (mapcar #'cm-last1 cm-delimiters) t)))
+          (inhibit-read-only t))
+      (while (re-search-forward delims-regexp nil t)
+        (dolist (n '(1 2 3))
+          (when (match-string n)
+            (remove-text-properties (match-beginning n) (match-end n) '(read-only nil rear-nonsticky nil))))))))
 
 (defun cm-insert-markup (type &optional text)
   "Insert CriticMarkup of TYPE.
@@ -725,9 +782,10 @@ is NIL."
           (throw 'quit nil))                         ; get out
         (cond
          ((memq action '(?a ?r ?d))
-          (cm-without-following-changes
-            (delete-region (third change) (fourth change))
-            (insert (cm-substitution-string change action)))
+          (let ((inhibit-read-only t))
+            (cm-without-following-changes
+              (delete-region (third change) (fourth change))
+              (insert (cm-substitution-string change action))))
           (point))
          ((eq action ?s)
           (fourth change)))))))

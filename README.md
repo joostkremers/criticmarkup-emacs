@@ -56,7 +56,7 @@ You can interactively accept or reject all changes with `C-c * I` (that is a cap
 
 ## Font lock ##
 
-`cm-mode` also adds the markup tags defined by CriticMarkup to `font-lock-keywords` and provides customisable faces to highlight them. The customisation group is called `criticmarkup-faces`.
+`cm-mode` also adds the markup tags defined by CriticMarkup to `font-lock-keywords` and provides customisable faces to highlight them. The customisation group is called `criticmarkup-faces`. Note that `cm-mode` also makes the markup tags read-only so that you cannot inadvertently modify them.
 
 You may notice that changes that span multiple lines are not highlighted. The reason for this is that multiline font lock in Emacs is not straightforward. There are ways to deal with this, but since `cm-mode` is a minor mode, it could interfere with the major mode's font locking mechanism if it did that. Besides, one is advised not to include newlines inside CriticMarkup tags anyway.
 
