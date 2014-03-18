@@ -98,13 +98,6 @@ The value is actually a list consisting of the text and a flag
 indicating whether the deletion was done with the backspace
 key.")
 
-(defvar cm-change-no-record nil
-  "Flag indicating whether to actually record a change.
-In follow changes mode, some operations that change the buffer
-must not be recorded with markup. Such functions can set this
-flag to indicate this. (Though they should actually use the macro
-`cm-without-following-changes'.)")
-
 (defvar cm-addition-regexp "\\(?:{\\+\\+.*?\\+\\+}\\)"
   "CriticMarkup addition regexp.")
 
@@ -302,9 +295,8 @@ it is added automatically."
 
 (defun cm-before-change (beg end)
   "Function to execute before a buffer change."
-  (unless (or cm-change-no-record       ; do not record this change
+  (unless (or undo-in-progress
               (and (= beg (point-min)) (= end (point-max)))) ; this happens on buffer switches
-    ;; (message "Point: %s; beg: %s; end: %s" (point) beg end)
     (if (= beg end)                   ; addition
         (cm-make-addition (cm-markup-at-point))
       ;; when the deletion was done with backspace, point is at end.
@@ -314,7 +306,7 @@ it is added automatically."
   "Function to execute after a buffer change.
 This function marks deletions. See cm-before-change for
 details."
-  (unless (or cm-change-no-record
+  (unless (or undo-in-progress
               (not cm-current-deletion))
     (apply 'cm-make-deletion cm-current-deletion)
     (setq cm-current-deletion nil)))
@@ -322,13 +314,8 @@ details."
 (defmacro cm-without-following-changes (&rest body)
   "Execute BODY without following changes."
   (declare (indent defun))
-  `(let ((cm-change-no-record t))
+  `(let ((inhibit-modification-hooks t))
      ,@body))
-
-(defadvice undo (around cm-no-follow (&optional arg))
-  "Do not record changes with CriticMarkup."
-  (cm-without-following-changes
-    ad-do-it))
 
 (defun cm-make-markups-writable ()
   "Make all CM markup delimiters in the current buffer writable."
