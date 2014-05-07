@@ -208,7 +208,9 @@ it is added automatically."
 
 ;;;###autoload
 (define-minor-mode cm-mode
-  "Minor mode for CriticMarkup."
+  "Minor mode for CriticMarkup.
+
+\\{cm-mode-map}"
   :init-value nil :lighter (:eval (concat " CM" (if cm-author (concat "@" cm-author)) (if cm-follow-changes "*"))) :global nil
   (cond
    (cm-mode                             ; cm-mode is turned on
