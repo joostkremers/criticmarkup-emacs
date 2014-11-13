@@ -286,12 +286,10 @@ it is added automatically."
         (progn
               (add-to-list 'before-change-functions 'cm-before-change t)
               (add-to-list 'after-change-functions 'cm-after-change)
-              (ad-activate 'undo t)
               (setq cm-follow-changes t)
               (message "Follow changes mode activated."))
       (setq before-change-functions (delq 'cm-before-change before-change-functions))
       (setq after-change-functions (delq 'cm-after-change after-change-functions))
-      (ad-deactivate 'undo)
       (setq cm-follow-changes nil)
       (message "Follow changes mode deactivated."))))
 
