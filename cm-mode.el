@@ -849,4 +849,4 @@ substitutions, `d' for comments and highlights."
 
 (provide 'cm-mode)
 
-;;; cm-mode ends here
+;;; cm-mode.el ends here
