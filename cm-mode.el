@@ -98,19 +98,19 @@ The value is actually a list consisting of the text and a flag
 indicating whether the deletion was done with the backspace
 key.")
 
-(defvar cm-addition-regexp "\\(?:{\\+\\+.*?\\+\\+}\\)"
+(defvar cm-addition-regexp "\\(?:{\\+\\+\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\+\\+}\\)"
   "CriticMarkup addition regexp.")
 
-(defvar cm-deletion-regexp "\\(?:{--.*?--}\\)"
+(defvar cm-deletion-regexp "\\(?:{--\\([[:ascii:]]\\|[[:nonascii:]]\\)*?--}\\)"
   "CriticMarkup deletion regexp.")
 
-(defvar cm-substitution-regexp "\\(?:{~~.*?~>.*?~~}\\)"
+(defvar cm-substitution-regexp "\\(?:{~~\\([[:ascii:]]\\|[[:nonascii:]]\\)*?~>\\([[:ascii:]]\\|[[:nonascii:]]\\)*?~~}\\)"
   "CriticMarkup substitution regexp.")
 
-(defvar cm-comment-regexp "\\(?:{>>.*?<<}\\)"
+(defvar cm-comment-regexp "\\(?:{>>\\([[:ascii:]]\\|[[:nonascii:]]\\)*?<<}\\)"
   "CriticMarkup comment regexp.")
 
-(defvar cm-highlight-regexp "\\(?:{==.*?==}\\)"
+(defvar cm-highlight-regexp "\\(?:{==\\([[:ascii:]]\\|[[:nonascii:]]\\)*?==}\\)"
   "CriticMarkup highlight regexp.")
 
 (defvar cm-current-markup-overlay nil
@@ -214,6 +214,7 @@ it is added automatically."
   :init-value nil :lighter (:eval (concat " CM" (if cm-author (concat "@" cm-author)) (if cm-follow-changes "*"))) :global nil
   (cond
    (cm-mode                             ; cm-mode is turned on
+    (setq font-lock-multiline t)
     (font-lock-add-keywords nil (cm-font-lock-keywords) t)
     (add-to-list 'font-lock-extra-managed-props 'read-only)
     (add-to-list 'font-lock-extra-managed-props 'rear-nonsticky)
@@ -238,7 +239,7 @@ it is added automatically."
     (add-to-list 'font-lock (mapconcat #'(lambda (elt) ; first we create the regexp to match
                                            (regexp-opt (list elt) t))
                                        markup
-                                       ".*?"))
+                                       "\\([[:ascii:]]\\|[[:nonascii:]]\\)*?"))
     (add-to-list 'font-lock `(0 ,face prepend) t) ; the highlighter for the entire change
     (dotimes (n (length markup))
       (add-to-list 'font-lock `(,(1+ n) '(face ,face read-only t)) t) ; make the tags read-only
@@ -252,7 +253,7 @@ it is added automatically."
 ;; `cm-font-lock-for-markup' produces a font-lock entry that can be given
 ;; to `font-lock-add-keywords'. To illustrate, the entry it produces for
 ;; additions is the following:
-;; 
+;;
 ;; ("\\({\\+\\+\\).*?\\(\\+\\+}\\)"
 ;;  (0 cm-addition-face)
 ;;  (1 '(face cm-addition-face read-only t))
@@ -322,8 +323,8 @@ details."
   (save-excursion
     (goto-char (point-min))
     (let ((delims-regexp (concat (regexp-opt (mapcar #'second cm-delimiters) t)
-                                 ".*?"
-                                 "\\(?:\\(~>\\).*?\\)?"
+                                 "\\([[:ascii:]]\\|[[:nonascii:]]\\)*?"
+                                 "\\(?:\\(~>\\)\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\)?"
                                  (regexp-opt (mapcar #'cm-last1 cm-delimiters) t)))
           (inhibit-read-only t))
       (while (re-search-forward delims-regexp nil t)
@@ -700,7 +701,7 @@ outside of them. The latter counts as being AT a change."
   (let ((bdelim (regexp-quote (second (assq 'cm-comment cm-delimiters))))
         (edelim (regexp-quote (cm-last1 (assq 'cm-comment cm-delimiters))))
         (text (second change)))
-    (if (string-match (concat bdelim "\\(.*?\\)" edelim) text)
+    (if (string-match (concat bdelim "\\(\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\)" edelim) text)
         (match-string 1 text))))
 
 (defun cm-extract-author (change)
@@ -711,7 +712,7 @@ CHANGE. The return value is the author tag without `@', or NIL if
 CHANGE has no comment part or a comment without an author."
   (let ((comment (cm-extract-comment change)))
     (if (and comment
-             (string-match "^@\\([^[:space:]]*\\).*?$" comment))
+             (string-match "^@\\([^[:space:]]*\\)\\([[:ascii:]]\\|[[:nonascii:]]\\)*?$" comment))
         (match-string 1 comment))))
 
 (defun cm-has-current-author-p (change)
@@ -794,22 +795,22 @@ substitutions, `d' for comments and highlights."
      ((eq type 'cm-addition)
       (if (not action)
           ""
-        (string-match "{\\+\\+\\(.*?\\)\\+\\+}" text)
+        (string-match "{\\+\\+\\(\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\)\\+\\+}" text)
         (match-string 1 text)))
      ((eq type 'cm-deletion)
       (if action
           ""
-        (string-match "{--\\(.*?\\)--}" text)
+        (string-match "{--\\(\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\)--}" text)
         (match-string 1 text)))
      ((eq type 'cm-substitution)
-      (string-match "{~~\\(.*?\\)~>\\(.*?\\)~~}" text)
+      (string-match "{~~\\(\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\)~>\\(\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\)~~}" text)
       (match-string (if action 2 1) text))
      ((and (eq type 'cm-comment)
            (eq action ?d))
       "")
      ((and (eq type 'cm-highlight)
            (eq action ?d))
-      (string-match "{==\\(.*?\\)==}" text)
+      (string-match "{==\\(\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\)==}" text)
       (match-string 1 text)))))
 
 (defun cm-accept/reject-all-changes ()
