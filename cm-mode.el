@@ -7,6 +7,7 @@
 ;; Created: 14 Feb 2013
 ;; Version: 1.0.1
 ;; Keywords: text, markdown
+;; Package-Requires: ((cl-lib "0.5"))
 
 ;; Redistribution and use in source and binary forms, with or without
 ;; modification, are permitted provided that the following conditions
@@ -82,7 +83,7 @@
 ;;; Code:
 
 (require 'thingatpt)
-(require 'cl-macs)
+(require 'cl-lib)
 
 (defun cm-last1 (list)
   "Return the last element of LIST."
@@ -322,7 +323,7 @@ details."
   "Make all CM markup delimiters in the current buffer writable."
   (save-excursion
     (goto-char (point-min))
-    (let ((delims-regexp (concat (regexp-opt (mapcar #'second cm-delimiters) t)
+    (let ((delims-regexp (concat (regexp-opt (mapcar #'cl-second cm-delimiters) t)
                                  "\\([[:ascii:]]\\|[[:nonascii:]]\\)*?"
                                  "\\(?:\\(~>\\)\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\)?"
                                  (regexp-opt (mapcar #'cm-last1 cm-delimiters) t)))
@@ -344,8 +345,8 @@ preceded with `@`.
 If TYPE is 'cm-highlight, a comment is added, which optionally
 starts with `cm-author'."
   (let* ((delims (cdr (assq type cm-delimiters)))
-         (bdelim (first delims))
-         (middle (if (third delims) (second delims))) ; "~>" for cm-substitution, otherwise nil
+         (bdelim (cl-first delims))
+         (middle (if (cl-third delims) (cl-second delims))) ; "~>" for cm-substitution, otherwise nil
          (edelim (cm-last1 delims)))
     (insert (or bdelim "")
             (or text (if (and (eq type 'cm-comment)
@@ -503,7 +504,7 @@ type."
                                            (length delim)))) ; adjust point if it's inside a delim
       (re-search-forward (regexp-quote delim) nil t n)))
    (t                                   ; moving backward
-    (let ((delim (second (assq type cm-delimiters))))
+    (let ((delim (cl-second (assq type cm-delimiters))))
       (forward-char (- (length delim) (or (cm-point-at-delim delim nil t)
                                           (length delim)))) ; adjust point if it's inside a delim
       (re-search-backward (regexp-quote delim) nil t (abs n))))))
@@ -511,7 +512,7 @@ type."
 (defun cm-beginning-of-markup (type)
   "Move to the beginning of a markup of TYPE."
   ;; first move out of the delimiter, if we're in one.
-  (cm-move-past-delim (second (assq type cm-delimiters)))
+  (cm-move-past-delim (cl-second (assq type cm-delimiters)))
   (cm-forward-markup type -1))
 
 (defun cm-end-of-markup (type)
@@ -542,7 +543,7 @@ TYPE.
 
 If BACKWARDS is T, only try moving backwards."
   (unless (and (not backwards)
-               (cm-move-past-delim (second (assq type cm-delimiters))))
+               (cm-move-past-delim (cl-second (assq type cm-delimiters))))
     (if (and (not (eq type 'cm-comment))
              (cm-comment-p (cm-markup-at-point t)))
         (cm-forward-markup 'cm-comment -1))
@@ -693,14 +694,14 @@ CHANGE is a change as returned by `cm-markup-at-point'. Point is
 within a change if it's inside the curly braces, not directly
 outside of them. The latter counts as being AT a change."
   (and change ; if there *is* no change, we're not inside one...
-       (> (point) (third change))
-       (< (point) (fourth change))))
+       (> (point) (cl-third change))
+       (< (point) (cl-fourth change))))
 
 (defun cm-extract-comment (change)
   "Extract the comment from CHANGE."
-  (let ((bdelim (regexp-quote (second (assq 'cm-comment cm-delimiters))))
+  (let ((bdelim (regexp-quote (cl-second (assq 'cm-comment cm-delimiters))))
         (edelim (regexp-quote (cm-last1 (assq 'cm-comment cm-delimiters))))
-        (text (second change)))
+        (text (cl-second change)))
     (if (string-match (concat bdelim "\\(\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\)" edelim) text)
         (match-string 1 text))))
 
@@ -738,14 +739,14 @@ is of any other type, check if there's a commend and include it."
         (backward-char 3)               ; hard-coded adjustment of point
         (let ((preceding (cm-markup-at-point)))
           (if preceding
-              (list (car preceding) (concat (second preceding) (second change)) (third preceding) (fourth change))
+              (list (car preceding) (concat (cl-second preceding) (cl-second change)) (cl-third preceding) (cl-fourth change))
             change))))
      (t (save-excursion
           (cm-end-of-markup (car change))
           (forward-char 3)              ; hard-coded adjustment of point
           (let ((comment (cm-markup-at-point)))
             (if (cm-comment-p comment)
-                (list (car change) (concat (second change) (second comment)) (third change) (fourth comment))
+                (list (car change) (concat (cl-second change) (cl-second comment)) (cl-third change) (cl-fourth comment))
               change)))))))
 
 (defun cm-accept/reject-change-at-point (&optional interactive)
@@ -759,7 +760,7 @@ is NIL."
   (let ((change (cm-markup-at-point)))
     (when change
       (setq change (cm-expand-change change)) ; include highlight & comment into one change
-      (move-overlay cm-current-markup-overlay (third change) (fourth change))
+      (move-overlay cm-current-markup-overlay (cl-third change) (cl-fourth change))
       (let ((action (cond
                      ((memq (car change) '(cm-addition cm-deletion cm-substitution))
                       (read-char-choice (format "%s: (a)ccept/(r)eject/(s)kip/(q)uit? "
@@ -776,11 +777,11 @@ is NIL."
          ((memq action '(?a ?r ?d))
           (let ((inhibit-read-only t))
             (cm-without-following-changes
-              (delete-region (third change) (fourth change))
+              (delete-region (cl-third change) (cl-fourth change))
               (insert (cm-substitution-string change action))))
           (point))
          ((eq action ?s)
-          (fourth change)))))))
+          (cl-fourth change)))))))
 
 (defun cm-substitution-string (change action)
   "Create the string to substitute CHANGE.
@@ -789,8 +790,8 @@ ACTION is a character, either `a' (accept), `r' (reject), or
 substitutions, `d' for comments and highlights."
   (when (eq action ?r)
     (setq action nil)) ; so we can use a simple `if' rather than a `cond'
-  (let ((type (first change))
-        (text (delete ?\n (second change)))) ; delete newlines because they mess up string-match below.
+  (let ((type (cl-first change))
+        (text (delete ?\n (cl-second change)))) ; delete newlines because they mess up string-match below.
     (cond
      ((eq type 'cm-addition)
       (if (not action)
@@ -827,7 +828,7 @@ substitutions, `d' for comments and highlights."
   (interactive)
   (let ((change (cm-expand-change (cm-markup-at-point))))
     (if change
-        (goto-char (fourth change)))))
+        (goto-char (cl-fourth change)))))
 
 (defun cm-forward-change (&optional n)
   "Move forward to the N'th next change."
@@ -836,7 +837,7 @@ substitutions, `d' for comments and highlights."
   (funcall (if (> n 0)
                're-search-forward
              're-search-backward)
-           (regexp-opt (mapcar #'second cm-delimiters)) nil t (abs n)))
+           (regexp-opt (mapcar #'cl-second cm-delimiters)) nil t (abs n)))
 
 (defun cm-backward-change (&optional n)
   "Move backward to the N'th preceding change."
@@ -850,4 +851,4 @@ substitutions, `d' for comments and highlights."
 
 (provide 'cm-mode)
 
-;;; cm-mode ends here
+;;; cm-mode.el ends here
