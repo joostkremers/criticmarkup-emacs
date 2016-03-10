@@ -479,7 +479,7 @@ is, instead of 0, the return value will be NIL."
   (save-excursion
     (if end
         (let ((distance (skip-chars-forward (substring delim 1) (+ (point) 2))))
-          (if (looking-back (regexp-quote delim))
+          (if (looking-back (regexp-quote delim) (- (point) 3))
               (if (> distance 0)
                   distance
                 (and (not strict) 0))))
