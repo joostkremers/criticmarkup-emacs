@@ -219,7 +219,7 @@ it is added automatically."
     (font-lock-add-keywords nil (cm-font-lock-keywords) t)
     (add-to-list 'font-lock-extra-managed-props 'read-only)
     (add-to-list 'font-lock-extra-managed-props 'rear-nonsticky)
-    (font-lock-fontify-buffer) ; usually sufficient to make the fontifications appear immediately
+    (font-lock-ensure)
     (setq cm-current-markup-overlay (make-overlay 1 1))
     (overlay-put cm-current-markup-overlay 'face 'highlight))
    ((not cm-mode)                       ; cm-mode is turned off
@@ -229,7 +229,7 @@ it is added automatically."
       (cm-make-markups-writable) ; we need to remove the read-only property by hand; it's cumbersome to do it with font-lock
       (unless modified
         (set-buffer-modified-p nil)))   ; removing text properties marks the buffer as modified, so we may need to adjust
-    (font-lock-fontify-buffer) ; usually sufficient to make the fontifications disappear immediately
+    (font-lock-ensure)
     (remove-overlays))))
 
 (defun cm-font-lock-for-markup (type)
