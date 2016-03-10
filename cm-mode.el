@@ -1,11 +1,11 @@
 ;;; cm-mode.el --- Minor mode for CriticMarkup
 
-;; Copyright (c) 2013 Joost Kremers
+;; Copyright (c) 2013-2016 Joost Kremers
 
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 14 Feb 2013
-;; Version: 1.0.1
+;; Version: 1.2
 ;; Keywords: text, markdown
 ;; Package-Requires: ((cl-lib "0.5"))
 
