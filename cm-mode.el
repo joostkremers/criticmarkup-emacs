@@ -85,6 +85,12 @@
 (require 'thingatpt)
 (require 'cl-lib)
 
+;; Add a compatibility function for Emacs 24.
+(defalias 'cm-font-lock-ensure (if (fboundp 'font-lock-ensure)
+                                 'font-lock-ensure
+                               'font-lock-fontify-buffer)
+  "Compatibility function for Emacs 24.")
+
 (defun cm-last1 (list)
   "Return the last element of LIST."
   (car (last list)))
@@ -219,7 +225,7 @@ it is added automatically."
     (font-lock-add-keywords nil (cm-font-lock-keywords) t)
     (add-to-list 'font-lock-extra-managed-props 'read-only)
     (add-to-list 'font-lock-extra-managed-props 'rear-nonsticky)
-    (font-lock-ensure)
+    (cm-font-lock-ensure)
     (setq cm-current-markup-overlay (make-overlay 1 1))
     (overlay-put cm-current-markup-overlay 'face 'highlight))
    ((not cm-mode)                       ; cm-mode is turned off
@@ -229,7 +235,7 @@ it is added automatically."
       (cm-make-markups-writable) ; we need to remove the read-only property by hand; it's cumbersome to do it with font-lock
       (unless modified
         (set-buffer-modified-p nil)))   ; removing text properties marks the buffer as modified, so we may need to adjust
-    (font-lock-ensure)
+    (cm-font-lock-ensure)
     (remove-overlays))))
 
 (defun cm-font-lock-for-markup (type)
