@@ -40,7 +40,7 @@
 ;; `cm-mode' is a minor mode that provides support for CriticMarkup in Emacs.
 ;;
 ;; CriticMarkup is a way for authors and editors to track changes to
-;; documents in plain text. It defines the following patterns for marking
+;; documents in plain text.  It defines the following patterns for marking
 ;; changes:
 ;;
 ;; - Addition {++ ++}
@@ -138,7 +138,7 @@ key.")
 If set, each change is automatically marked with a comment
 containing this tag.
 
-The tag should not contain spaces. Do not include the `@' sign,
+The tag should not contain spaces.  Do not include the `@' sign,
 it is added automatically."
   :group 'criticmarkup
   :safe 'stringp
