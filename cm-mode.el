@@ -105,19 +105,19 @@ The value is actually a list consisting of the text and a flag
 indicating whether the deletion was done with the backspace
 key.")
 
-(defvar cm-addition-regexp "\\(?:{\\+\\+\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\+\\+}\\)"
+(defvar cm-addition-regexp "\\(?:{\\+\\+\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?\\)\\+\\+}\\)"
   "CriticMarkup addition regexp.")
 
-(defvar cm-deletion-regexp "\\(?:{--\\([[:ascii:]]\\|[[:nonascii:]]\\)*?--}\\)"
+(defvar cm-deletion-regexp "\\(?:{--\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?\\)--}\\)"
   "CriticMarkup deletion regexp.")
 
-(defvar cm-substitution-regexp "\\(?:{~~\\([[:ascii:]]\\|[[:nonascii:]]\\)*?~>\\([[:ascii:]]\\|[[:nonascii:]]\\)*?~~}\\)"
+(defvar cm-substitution-regexp "\\(?:{~~\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?\\)~>\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?\\)~~}\\)"
   "CriticMarkup substitution regexp.")
 
-(defvar cm-comment-regexp "\\(?:{>>\\([[:ascii:]]\\|[[:nonascii:]]\\)*?<<}\\)"
+(defvar cm-comment-regexp "\\(?:{>>\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?\\)<<}\\)"
   "CriticMarkup comment regexp.")
 
-(defvar cm-highlight-regexp "\\(?:{==\\([[:ascii:]]\\|[[:nonascii:]]\\)*?==}\\)"
+(defvar cm-highlight-regexp "\\(?:{==\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?\\)==}\\)"
   "CriticMarkup highlight regexp.")
 
 (defvar cm-current-markup-overlay nil
@@ -802,22 +802,22 @@ substitutions, `d' for comments and highlights."
      ((eq type 'cm-addition)
       (if (not action)
           ""
-        (string-match "{\\+\\+\\(\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\)\\+\\+}" text)
+        (string-match cm-addition-regexp text)
         (match-string 1 text)))
      ((eq type 'cm-deletion)
       (if action
           ""
-        (string-match "{--\\(\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\)--}" text)
+        (string-match cm-deletion-regexp text)
         (match-string 1 text)))
      ((eq type 'cm-substitution)
-      (string-match "{~~\\(\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\)~>\\(\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\)~~}" text)
+      (string-match cm-substitution-regexp text)
       (match-string (if action 2 1) text))
      ((and (eq type 'cm-comment)
            (eq action ?d))
       "")
      ((and (eq type 'cm-highlight)
            (eq action ?d))
-      (string-match "{==\\(\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\)==}" text)
+      (string-match cm-highlight-regexp text)
       (match-string 1 text)))))
 
 (defun cm-accept/reject-all-changes ()
