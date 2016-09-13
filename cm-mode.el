@@ -183,10 +183,10 @@ it is added automatically."
 
 (eval-and-compile
   (defvar cm-delimiters '((cm-addition "{++" "++}")
-                          (cm-deletion "{--" "--}")
-                          (cm-substitution "{~~" "~>" "~~}")
-                          (cm-comment "{>>" "<<}")
-                          (cm-highlight "{==" "==}"))
+                        (cm-deletion "{--" "--}")
+                        (cm-substitution "{~~" "~>" "~~}")
+                        (cm-comment "{>>" "<<}")
+                        (cm-highlight "{==" "==}"))
     "CriticMarkup delimiters."))
 
 ;; create markup predicates
