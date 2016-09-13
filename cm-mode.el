@@ -91,7 +91,7 @@
                                'font-lock-fontify-buffer)
   "Compatibility function for Emacs 24.")
 
-(defun cm-last1 (list)
+(defsubst cm-last1 (list)
   "Return the last element of LIST."
   (car (last list)))
 
