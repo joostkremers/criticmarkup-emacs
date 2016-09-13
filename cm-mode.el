@@ -455,7 +455,7 @@ BEG and END delimit the text to be substituted."
 
 (defun cm-comment (&optional beg end)
   "Add a comment.
-If the region is active, the text in the region as deli ited by
+If the region is active, the text in the region as delimited by
 BEG and END, is highlighted.  If point is in an existing change,
 the comment is added after it."
   (interactive "r")
