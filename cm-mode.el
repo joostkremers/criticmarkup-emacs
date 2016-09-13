@@ -285,7 +285,10 @@ it is added automatically."
   (mapcar #'cm-font-lock-for-markup cm-delimiters))
 
 (defun cm-follow-changes (&optional arg)
-  "Record changes."
+  "Activate follow changes mode.
+If ARG is positive, activate follow changes mode, if ARG is 0 or
+negative, deactivate it.  If ARG is `toggle', toggle follow
+changes mode."
   (interactive (list (or current-prefix-arg 'toggle)))
   (let ((enable (if (eq arg 'toggle)
                     (not cm-follow-changes)
@@ -302,7 +305,9 @@ it is added automatically."
       (message "Follow changes mode deactivated."))))
 
 (defun cm-before-change (beg end)
-  "Function to execute before a buffer change."
+  "Function to execute before a buffer change.
+BEG and END are the beginning and the end of the region to be
+changed."
   (unless (or undo-in-progress
               (and (= beg (point-min)) (= end (point-max)))) ; this happens on buffer switches
     (if (= beg end)                   ; addition
@@ -312,8 +317,9 @@ it is added automatically."
 
 (defun cm-after-change (beg end length)
   "Function to execute after a buffer change.
-This function marks deletions. See cm-before-change for
-details."
+This function marks deletions. See cm-before-change for details.
+BEG and END mark the region to be changed, LENGTH is the length
+of the affected text."
   (unless (or undo-in-progress
               (not cm-current-deletion))
     (apply 'cm-make-deletion cm-current-deletion)
@@ -341,7 +347,7 @@ details."
 
 (defun cm-insert-markup (type &optional text)
   "Insert CriticMarkup of TYPE.
-Also insert TEXT if non-NIL. For deletions, TEXT is the deleted
+Also insert TEXT if non-NIL.  For deletions, TEXT is the deleted
 text; for substitutions, the text to be substituted; for
 comments, the text to be highlighted.
 
@@ -381,7 +387,7 @@ starts with `cm-author'."
 (defun cm-addition ()
   "Make an addition at point.
 If point is at an addition markup already, the new addition is
-combined with it. If point is inside any other markup, no
+combined with it.  If point is inside any other markup, no
 addition can be made."
   (interactive)
   (let ((change (cm-markup-at-point)))
@@ -392,7 +398,8 @@ addition can be made."
       (error "Cannot make an addition here"))))
 
 (defun cm-deletion (beg end)
-  "Mark text for deletion."
+  "Mark text for deletion.
+BEG and END delimit the region to be deleted."
   (interactive "r")
   (let ((change (cm-markup-at-point)))
     (when (cm-point-inside-change-p change)
@@ -404,15 +411,15 @@ addition can be made."
 (defun cm-make-addition (change)
   "Position point for an addition and insert addition markup if necessary.
 CHANGE is the change markup at point, if any, as returned by
-cm-markup-at-point. If this is an addition, the new addition is
-combined with it, even if point is right outside it. (That avoids
-having two additions adjacent to each other.) If it is another
+cm-markup-at-point.  If this is an addition, the new addition is
+combined with it, even if point is right outside it.  This avoids
+having two additions adjacent to each other.  If it is another
 kind of markup, and point is inside the curly braces, we make
 sure point is not in the delimiter before adding text."
   (setq change (cm-expand-change change))
   (if (or (cm-point-inside-change-p change)
-              (and (cm-addition-p change)
-                   (cm-has-current-author-p change)))
+          (and (cm-addition-p change)
+               (cm-has-current-author-p change)))
       (cm-move-into-markup 'cm-addition)
     (cm-insert-markup 'cm-addition)
     (cm-move-into-markup 'cm-addition t)))
@@ -438,7 +445,8 @@ point will then be left before the deletion markup."
         (cm-forward-out-of-change)))))
 
 (defun cm-substitution (beg end)
-  "Mark a substitution."
+  "Mark a substitution.
+BEG and END delimit the text to be substituted."
   (interactive "r")
   (when (cm-point-inside-change-p (cm-markup-at-point))
     (error "Cannot make a substitution here")) ; TODO we should check whether the region contains markup.
@@ -449,8 +457,9 @@ point will then be left before the deletion markup."
 
 (defun cm-comment (&optional beg end)
   "Add a comment.
-If the region is active, the text in the region is highlighted.
-If point is in an existing change, the comment is added after it."
+If the region is active, the text in the region as deli ited by
+BEG and END, is highlighted.  If point is in an existing change,
+the comment is added after it."
   (interactive "r")
   (cm-without-following-changes
     (let ((change (cm-markup-at-point))
@@ -475,12 +484,12 @@ If point is in an existing change, the comment is added after it."
 If DELIM is an end delimiter, optional argument END must be T.
 
 Point counts as being at delim if it is in a delimiter or
-directly outside, but not when it is directly inside. So `|{++',
+directly outside, but not when it is directly inside.  So `|{++',
 `{|++', `{+|+', return 0, 1, and 2 respectively, while `{++|'
-returns NIL. Similarly, `++}|', `++|}', `+|+}' return 0, 1, and
+returns NIL.  Similarly, `++}|', `++|}', `+|+}' return 0, 1, and
 2, while `|++}' returns NIL.
 
-If STRICT is non-NIL, point must be inside the delimiter. That
+If STRICT is non-NIL, point must be inside the delimiter.  That
 is, instead of 0, the return value will be NIL."
   (save-excursion
     (if end
@@ -496,10 +505,11 @@ is, instead of 0, the return value will be NIL."
               (and (not strict) 0)))))))
 
 (defun cm-forward-markup (type &optional n)
-  "Move forward N markups of TYPE.
-If N is negative, move backward. If point is inside a delimiter,
-this function moves point to the previous/next markup. If it's
-inside a markup, it moves it to the edge. If point is at the edge
+  "Move forward to the next markup of TYPE.
+Optional argument N indicates how many markups to move.  If N is
+negative, move backward.  If point is inside a delimiter, this
+function moves point to the previous/next markup.  If point is
+inside a markup, it moves to the edge.  If point is at the edge
 of a markup, it moves to the end of the next markup of the same
 type."
   (or n (setq n 1))
@@ -530,7 +540,7 @@ type."
 (defun cm-move-past-delim (delim &optional end)
   "Move point past DELIM into the markup.
 If DELIM is an end delimiter, END must be T. If point is not at a
-delimiter, do not move. Return T if point has moved."
+delimiter, do not move.  Return T if point has moved."
   (let ((len (length delim))
         (pos (point)))
     (if end
@@ -543,7 +553,7 @@ delimiter, do not move. Return T if point has moved."
 (defun cm-move-into-markup (type &optional backwards)
   "Make sure point is inside the delimiters of TYPE.
 Point is either moved forward if at an opening delimiter or
-backward if at a closing delimiter. When moving backward, point
+backward if at a closing delimiter.  When moving backward, point
 is moved past a comment if the change before the comment is of
 TYPE.
 
@@ -642,13 +652,13 @@ If N is negative, move backward."
 
 (defun cm-bounds-of-markup-at-point (type)
   "Return the bounds of markup TYPE at point.
-The return value is a list of the form (START-POS END-POS). If
+The return value is a list of the form (START-POS END-POS).  If
 point is not within a markup of TYPE, return NIL.
 
 TYPE is one of `cm-addition', `cm-deletion', `cm-substitution',
-`cm-comment', or `cm-highlight'. Note that in the case of
+`cm-comment', or `cm-highlight'.  Note that in the case of
 comments, only the comment is returned, any preceding highlight
-is ignored. The same holds for highlights: the following comment
+is ignored.  The same holds for highlights: the following comment
 is not included."
   (if (thing-at-point type)
       (let ((beg (save-excursion
@@ -696,9 +706,9 @@ returns the one that follows point, unless BACKWARD is non-NIL."
 
 (defun cm-point-inside-change-p (change)
   "Return T if point is inside CHANGE.
-CHANGE is a change as returned by `cm-markup-at-point'. Point is
+CHANGE is a change as returned by `cm-markup-at-point'.  Point is
 within a change if it's inside the curly braces, not directly
-outside of them. The latter counts as being AT a change."
+outside of them.  The latter counts as being AT a change."
   (and change ; if there *is* no change, we're not inside one...
        (> (point) (cl-third change))
        (< (point) (cl-fourth change))))
@@ -715,7 +725,7 @@ outside of them. The latter counts as being AT a change."
   "Extract the author tag of CHANGE.
 The author tag should start with an `@' sign, should not contain
 any spaces and should be at the start of the comment part of
-CHANGE. The return value is the author tag without `@', or NIL if
+CHANGE.  The return value is the author tag without `@', or nil if
 CHANGE has no comment part or a comment without an author."
   (let ((comment (cm-extract-comment change)))
     (if (and comment
@@ -735,8 +745,8 @@ CHANGE matches `cm-author'; if CHANGE has no author; or if
 (defun cm-expand-change (change)
   "Expand CHANGE with a following comment or, if a comment, with a preceding change.
 If CHANGE is a comment, check if there's another change preceding
-it; if so, include it and change the type accordingly. If CHANGE
-is of any other type, check if there's a commend and include it."
+it; if so, include it and change the type accordingly.  If CHANGE
+is of any other type, check if there's a comment and include it."
   (unless (not change)
     (cond
      ((cm-comment-p change)
@@ -760,8 +770,8 @@ is of any other type, check if there's a commend and include it."
 
 Return point if the change is accepted or rejected or the
 position after the change if it is skipped (point is not changed
-in that case). If no change is found at point, the return value
-is NIL."
+in that case).  If no change is found at point, the return value
+is nil."
   (interactive "p") ; we use "p" to signal that the function was called interactively
   (let ((change (cm-markup-at-point)))
     (when change
@@ -792,7 +802,7 @@ is NIL."
 (defun cm-substitution-string (change action)
   "Create the string to substitute CHANGE.
 ACTION is a character, either `a' (accept), `r' (reject), or
-`d' (delete). `a' and `r' are valid for additions, deletions and
+`d' (delete).  `a' and `r' are valid for additions, deletions and
 substitutions, `d' for comments and highlights."
   (when (eq action ?r)
     (setq action nil)) ; so we can use a simple `if' rather than a `cond'
@@ -851,7 +861,7 @@ substitutions, `d' for comments and highlights."
   (cm-forward-change (- n)))
 
 (defun cm-set-author (str)
-  "Set the author string."
+  "Set the author string to STR."
   (interactive "sSet author to: ")
   (setq cm-author (if (string= str "") nil str)))
 
