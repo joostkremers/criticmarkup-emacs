@@ -134,7 +134,7 @@ key.")
   :group 'criticmarkup)
 
 (defcustom cm-author nil
-  "*Author tag.
+  "Author tag.
 If set, each change is automatically marked with a comment
 containing this tag.
 
@@ -147,23 +147,23 @@ it is added automatically."
 (make-variable-buffer-local 'cm-author)
 
 (defface cm-addition-face '((t (:foreground "forest green")))
-  "*Face for CriticMarkup additions."
+  "Face for CriticMarkup additions."
   :group 'criticmarkup-faces)
 
 (defface cm-deletion-face '((t (:foreground "red4")))
-  "*Face for CriticMarkup deletions."
+  "Face for CriticMarkup deletions."
   :group 'criticmarkup-faces)
 
 (defface cm-substitution-face '((t (:foreground "OrangeRed3")))
-  "*Face for CriticMarkup substitutions."
+  "Face for CriticMarkup substitutions."
   :group 'criticmarkup-faces)
 
 (defface cm-comment-face '((t (:foreground "blue")))
-  "*Face for CriticMarkup comments."
+  "Face for CriticMarkup comments."
   :group 'criticmarkup-faces)
 
 (defface cm-highlight-face '((t (:foreground "dark magenta")))
-  "*Face for CriticMarkup highlights."
+  "Face for CriticMarkup highlights."
   :group 'criticmarkup-faces)
 
 (defvar cm-addition-face 'cm-addition-face
@@ -315,7 +315,7 @@ changed."
 
 (defun cm-after-change (beg end length)
   "Function to execute after a buffer change.
-This function marks deletions. See cm-before-change for details.
+This function marks deletions.  See cm-before-change for details.
 BEG and END mark the region to be changed, LENGTH is the length
 of the affected text."
   (unless (or undo-in-progress
