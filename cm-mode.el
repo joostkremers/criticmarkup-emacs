@@ -146,23 +146,23 @@ it is added automatically."
                  (string :tag "Author")))
 (make-variable-buffer-local 'cm-author)
 
-(defface cm-addition-face '((t (:foreground "forest green")))
+(defface cm-addition-face '((t (:inherit success)))
   "Face for CriticMarkup additions."
   :group 'criticmarkup-faces)
 
-(defface cm-deletion-face '((t (:foreground "red4")))
+(defface cm-deletion-face '((t (:inherit error)))
   "Face for CriticMarkup deletions."
   :group 'criticmarkup-faces)
 
-(defface cm-substitution-face '((t (:foreground "OrangeRed3")))
+(defface cm-substitution-face '((t (:inherit font-lock-warning-face)))
   "Face for CriticMarkup substitutions."
   :group 'criticmarkup-faces)
 
-(defface cm-comment-face '((t (:foreground "blue")))
+(defface cm-comment-face '((t (:inherit font-lock-comment-face)))
   "Face for CriticMarkup comments."
   :group 'criticmarkup-faces)
 
-(defface cm-highlight-face '((t (:foreground "dark magenta")))
+(defface cm-highlight-face '((t (:inherit highlight)))
   "Face for CriticMarkup highlights."
   :group 'criticmarkup-faces)
 
