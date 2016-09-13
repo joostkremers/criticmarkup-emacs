@@ -246,7 +246,7 @@ it is added automatically."
     (add-to-list 'font-lock (mapconcat #'(lambda (elt) ; first we create the regexp to match
                                            (regexp-opt (list elt) t))
                                        markup
-                                       "\\([[:ascii:]]\\|[[:nonascii:]]\\)*?"))
+                                       "\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?"))
     (add-to-list 'font-lock `(0 ,face prepend) t) ; the highlighter for the entire change
     (dotimes (n (length markup))
       (add-to-list 'font-lock `(,(1+ n) '(face ,face read-only t)) t) ; make the tags read-only
