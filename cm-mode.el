@@ -260,9 +260,8 @@ it is added automatically."
 ;; `cm-font-lock-for-markup' produces a font-lock entry that can be given
 ;; to `font-lock-add-keywords'. To illustrate, the entry it produces for
 ;; additions is the following:
-;;
-;; ("\\({\\+\\+\\).*?\\(\\+\\+}\\)"
-;;  (0 cm-addition-face)
+;; ("\\({\\+\\+\\)\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?\\(\\+\\+}\\)"
+;;  (0 cm-addition-face prepend)
 ;;  (1 '(face cm-addition-face read-only t))
 ;;  ("." (progn (goto-char (1- (match-end 1)))
 ;;              (1+ (point)))
@@ -274,11 +273,10 @@ it is added automatically."
 ;;   nil
 ;;   (0 '(face cm-addition-face rear-nonsticky (read-only)))))
 ;;
-;; This does some nice magic: it highlight cm-addition-face to addition
-;; markups, it makes the tags themselves, `{++' and `++}', read-only, and
-;; it gives the last character of the tags the text property
-;; (rear-nonsticky (read-only)), so that it's possible to add characters
-;; after the tag.
+;; This does some nice magic: it highlights addition markups with
+;; cm-addition-face, it makes the tags themselves, `{++' and `++}', read-only, and
+;; it gives the last character of the tags the text property (rear-nonsticky
+;; (read-only)), so that it's possible to add characters after the tag.
 
 (defun cm-font-lock-keywords ()
   "Return a list of font lock keywords."
