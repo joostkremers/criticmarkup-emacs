@@ -782,7 +782,10 @@ is of any other type, check if there's a comment and include it."
 Return point if the change is accepted or rejected or the
 position after the change if it is skipped (point is not changed
 in that case).  If no change is found at point, the return value
-is nil."
+is nil.
+
+INTERACTIVE is used to determine whether the function was called
+interactively or not."
   (interactive "p") ; we use "p" to signal that the function was called interactively
   (let ((change (cm-markup-at-point)))
     (when change
