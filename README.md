@@ -33,12 +33,6 @@ You may notice that changes that span multiple lines are not highlighted. The re
 To mitigate this problem, you can use soft wrap (with `visual-line-mode`). Since each paragraph is then essentially a single line, font lock works even across multiple (visual) lines.
 
 
-## Follow changes mode ##
-
-`cm-mode` also provides a simple 'follow changes' mode. When activated, changes you make to the buffer are automatically marked as insertions or deletions. Substitutions cannot be made automatically (that is, if you mark a word, delete it and then type a replacement, it will still be marked as a sequence of deletion+insertion, not as a substitution), but they can still be made manually with `C-c * s`. You can activate and deactivate follow changes mode with `C-c * F`. When it's active, the modeline indicator for `cm-mode` changes from `CM` to `CM*`. 
-
-Note that some changes are not (properly) recorded. For example, capitalizing, downcasing or upcasing a word with `M-c` / `M-l` / `M-u` leaves a deletion markup but no addition markup. Similar problems may occur with other editing commands.
-
 ## Keeping track of the author ##
 
 Comments can be used to keep track of who made a particular change. If you want to do this automatically, you can set the variable `cm-author`. When this variable is set, its value is automatically added as a comment to every change you make, preceded by `@`. If you explicitly make a comment with `C-c * c`, the value of `cm-author` is inserted at the beginning of the comment.
@@ -64,17 +58,27 @@ For comments and highlights, the choices are different: `d` to delete the commen
 You can interactively accept or reject all changes with `C-c * I` (that is a capital `i`). This will go through each change asking you what you want to do with it. Here, `s` skips the current change and moves on to the next one, while typing `q` leaves the current change alone and quits the accept/reject session.
 
 
-## Disclaimer ##
+## Key bindings ##
 
-`cm-mode` should be considered alpha software, so try at your own risk. If you run into problems, I would very much appreciate it if you open an issue on Github or send me an email.
+By default, `cm-mode` uses `C-c *` as a prefix to all the commands it defines. If this is inconvenient, you can easily change it:
+
+```
+(define-key cm-mode-map (kbd "C-c *") nil)
+(define-key cm-mode-map (kbd "C-c c") cm-prefix-map)
+```
+
+## Follow changes mode ##
+
+`cm-mode` also provides a simple 'follow changes' mode. When activated, changes you make to the buffer are automatically marked as insertions or deletions. Substitutions cannot be made automatically (that is, if you mark a word, delete it and then type a replacement, it will still be marked as a sequence of deletion+insertion, not as a substitution), but they can still be made manually with `C-c * s`.
+
+You can activate and deactivate follow changes mode with `C-c * F`. When it's active, the modeline indicator for `cm-mode` changes from `CM` to `CM*`. Note that some changes are not (properly) recorded, so to what extent this mode is useful very much depends on your needs.
 
 
 ## TODO ##
 
 - Commands to accept or reject all changes in one go. (These won't be bound to keys, though.)
 - Automatic generation of time/date stamp in comments.
-- Mouse support?
-
+- Accept/reject changes of one particular author, skipping the others.
 
 ## Sceenshot ##
 
