@@ -62,6 +62,8 @@
 ;; Key bindings
 ;; ------------
 ;;
+;; `cm-mode' provides the following key bindings:
+;;
 ;; `C-c * a' : add text
 ;; `C-c * d' : delete text
 ;; `C-c * s' : make a substitution
@@ -71,9 +73,16 @@
 ;; `C-c * *' : move forward out of a change
 ;; `C-c * f' : move forward to the next change
 ;; `C-c * b' : move backward to the previous change
-;; `C-c * C' : set author
+;; `C-c * t' : set author
 ;; `C-c * F' : activate follow changes mode
 ;;
+;; The `C-c *' prefix can easily be changed, if so desired:
+;;
+;; (define-key cm-mode-map (kbd "C-c *") nil)
+;; (define-key cm-mode-map (kbd "C-c c") 'cm-prefix-map)
+;;
+;; This unbinds `C-c *' and sets up `C-c c' as the prefix for all cm-mode
+;; commands.
 ;;
 ;; Usage
 ;; -----
@@ -199,25 +208,29 @@ it is added automatically."
 
 (defvar cm-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\C-c*a" 'cm-addition)
-    (define-key map "\C-c*d" 'cm-deletion)
-    (define-key map "\C-c*s" 'cm-substitution)
-    (define-key map "\C-c*c" 'cm-comment)
-    (define-key map "\C-c*i" 'cm-accept/reject-change-at-point)
-    (define-key map "\C-c*I" 'cm-accept/reject-all-changes)
-    (define-key map "\C-c**" 'cm-forward-out-of-change)
-    (define-key map "\C-c*f" 'cm-forward-change)
-    (define-key map "\C-c*b" 'cm-backward-change)
-    (define-key map "\C-c*t" 'cm-set-author)
-    (define-key map "\C-c*F" 'cm-follow-changes)
+    (define-key map (kbd "C-c *") 'cm-prefix-map)
     map)
-  "Keymap for cm-mode.")
+  "Keymap for `cm-mode'.
+This keymap contains only one binding: `C-c *', which is bound to
+`cm-prefix-map', the keymap that holds the actual key bindings.")
+
+(defvar cm-prefix-map)  ; mainly to silence the byte compiler
+(define-prefix-command 'cm-prefix-map)
+(define-key cm-prefix-map "a" #'cm-addition)
+(define-key cm-prefix-map "d" #'cm-deletion)
+(define-key cm-prefix-map "s" #'cm-substitution)
+(define-key cm-prefix-map "c" #'cm-comment)
+(define-key cm-prefix-map "i" #'cm-accept/reject-change-at-point)
+(define-key cm-prefix-map "I" #'cm-accept/reject-all-changes)
+(define-key cm-prefix-map "*" #'cm-forward-out-of-change)
+(define-key cm-prefix-map "f" #'cm-forward-change)
+(define-key cm-prefix-map "b" #'cm-backward-change)
+(define-key cm-prefix-map "t" #'cm-set-author)
+(define-key cm-prefix-map "F" #'cm-follow-changes)
 
 ;;;###autoload
 (define-minor-mode cm-mode
-  "Minor mode for CriticMarkup.
-
-\\{cm-mode-map}"
+  "Minor mode for CriticMarkup."
   :init-value nil :lighter (:eval (concat " CM" (if cm-author (concat "@" cm-author)) (if cm-follow-changes "*"))) :global nil
   (cond
    (cm-mode                             ; cm-mode is turned on
