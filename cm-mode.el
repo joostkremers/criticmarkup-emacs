@@ -155,6 +155,15 @@ it is added automatically."
                  (string :tag "Author")))
 (make-variable-buffer-local 'cm-author)
 
+(defcustom cm-read-only-annotations nil
+  "Make annotations read-only. Useful if you 'criticise' later,
+not so useful if you use markup while writing."
+  :group 'criticmarkup
+  :safe 'booleanp
+  :type 'boolean)
+(make-variable-buffer-local 'cm-read-only-annotations)
+
+
 (defface cm-addition-face '((t (:inherit success)))
   "Face for CriticMarkup additions."
   :group 'criticmarkup-faces)
@@ -236,7 +245,8 @@ This keymap contains only one binding: `C-c *', which is bound to
    (cm-mode                             ; cm-mode is turned on
     (setq font-lock-multiline t)
     (font-lock-add-keywords nil (cm-font-lock-keywords) t)
-    (add-to-list 'font-lock-extra-managed-props 'read-only)
+    (when cm-read-only-annotations
+	(add-to-list 'font-lock-extra-managed-props 'read-only))
     (add-to-list 'font-lock-extra-managed-props 'rear-nonsticky)
     (cm-font-lock-ensure)
     (setq cm-current-markup-overlay (make-overlay 1 1))
@@ -262,12 +272,13 @@ This keymap contains only one binding: `C-c *', which is bound to
                                        "\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?"))
     (add-to-list 'font-lock `(0 ,face prepend) t) ; the highlighter for the entire change
     (dotimes (n (length markup))
-      (add-to-list 'font-lock `(,(1+ n) '(face ,face read-only t)) t) ; make the tags read-only
-      (add-to-list 'font-lock `("." (progn ; and make the read-only property of the final character rear-nonsticky
-                                      (goto-char (1- (match-end ,(1+ n))))
-                                      (1+ (point)))
-                                nil
-                                (0 '(face ,face rear-nonsticky (read-only)))) t))
+      (when cm-read-only-annotations
+	(add-to-list 'font-lock `(,(1+ n) '(face ,face read-only t)) t) ; make the tags read-only
+	(add-to-list 'font-lock `("." (progn ; and make the read-only property of the final character rear-nonsticky
+					(goto-char (1- (match-end ,(1+ n))))
+					(1+ (point)))
+				  nil
+				  (0 '(face ,face rear-nonsticky (read-only)))) t)))
     font-lock))
 
 ;; `cm-font-lock-for-markup' produces a font-lock entry that can be given
