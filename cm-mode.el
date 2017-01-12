@@ -155,14 +155,17 @@ it is added automatically."
                  (string :tag "Author")))
 (make-variable-buffer-local 'cm-author)
 
-(defcustom cm-read-only-annotations nil
-  "Make annotations read-only. Useful if you 'criticise' later,
-not so useful if you use markup while writing."
+(defcustom cm-read-only-annotations t
+  "Make annotations read-only.
+By default, annotation markers are read-only, so they cannot be
+overwritten.  This interferes with reformatting, however, so you
+can disable this behaviour.  Note that if you change the value of
+this variable for a particular buffer, you may need to deactivate
+and reactivate `cm-mode'."
   :group 'criticmarkup
   :safe 'booleanp
   :type 'boolean)
 (make-variable-buffer-local 'cm-read-only-annotations)
-
 
 (defface cm-addition-face '((t (:inherit success)))
   "Face for CriticMarkup additions."
