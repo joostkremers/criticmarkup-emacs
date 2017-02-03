@@ -240,6 +240,21 @@ This keymap contains only one binding: `C-c *', which is bound to
 (define-key cm-prefix-map "t" #'cm-set-author)
 (define-key cm-prefix-map "F" #'cm-follow-changes)
 
+(easy-menu-define cm-mode-menu cm-mode-map "CriticMarkup Menu"
+  '("CriticMarkup"
+    ["Addition" cm-addition t]
+    ["Deletion" cm-deletion t]
+    ["Substitution" cm-substitution t]
+    ["Comment" cm-comment t]
+    "--"
+    ["Accept/Reject Change" cm-accept/reject-change-at-point t]
+    ["Accept/Reject All Changes" cm-accept/reject-all-changes t]
+    "--"
+    ["Move To Next Change" cm-forward-change t]
+    ["Move To Previous Change" cm-backward-change t]
+    "--"
+    ["Set Author" cm-set-author t]))
+
 ;;;###autoload
 (define-minor-mode cm-mode
   "Minor mode for CriticMarkup."
