@@ -249,7 +249,7 @@ This keymap contains only one binding: `C-c *', which is bound to
     (setq font-lock-multiline t)
     (font-lock-add-keywords nil (cm-font-lock-keywords) t)
     (when cm-read-only-annotations
-	(add-to-list 'font-lock-extra-managed-props 'read-only))
+      (add-to-list 'font-lock-extra-managed-props 'read-only))
     (add-to-list 'font-lock-extra-managed-props 'rear-nonsticky)
     (cm-font-lock-ensure)
     (setq cm-current-markup-overlay (make-overlay 1 1))
