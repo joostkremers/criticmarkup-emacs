@@ -392,9 +392,9 @@ text; for substitutions, the text to be substituted; for
 comments, the text to be highlighted.
 
 If `cm-author' is set, a comment is added with its value,
-preceded with `@`.
+preceded with `@'.
 
-If TYPE is 'cm-highlight, a comment is added, which optionally
+If TYPE is `cm-highlight', a comment is added, which optionally
 starts with `cm-author'."
   (let* ((delims (cdr (assq type cm-delimiters)))
          (bdelim (cl-first delims))
