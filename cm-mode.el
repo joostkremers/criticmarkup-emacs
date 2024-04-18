@@ -456,7 +456,7 @@ combined with it, even if point is right outside it.  This avoids
 having two additions adjacent to each other.  If it is another
 kind of markup, and point is inside the curly braces, we make
 sure point is not in the delimiter before adding text."
-  (setq change (cm-expand-change change))
+  (setq change (cm-merge-comment change))
   (if (or (cm-point-inside-change-p change)
           (and (cm-addition-p change)
                (cm-has-current-author-p change)))
@@ -472,7 +472,7 @@ If BACKSPACE is T, the deletion was done with the backspace key;
 point will then be left before the deletion markup."
   ;; TODO: we should check whether the text to be deleted contains part of
   ;; a change.
-  (let ((change (cm-expand-change (cm-markup-at-point))))
+  (let ((change (cm-merge-comment (cm-markup-at-point))))
     (unless (cm-point-inside-change-p change)
       (save-excursion
         (if (not (and (cm-deletion-p change)
@@ -782,11 +782,13 @@ CHANGE matches `cm-author'; if CHANGE has no author; or if
         (not author)
         (string= author cm-author))))
 
-(defun cm-expand-change (change)
-  "Expand CHANGE with a following comment or, if a comment, with a preceding change.
-If CHANGE is a comment, check if there's another change preceding
-it; if so, include it and change the type accordingly.  If CHANGE
-is of any other type, check if there's a comment and include it."
+(defun cm-merge-comment (change)
+  "Merge CHANGE with a following comment.
+CHANGE is a list as returned by `cm-markup-at-point'.  If there
+is a comment following CHANGE, return an updated list that
+contains both CHANGE and the comment.  If CHANGE is a comment
+itself, check if there's another change preceding it and include
+it."
   (unless (not change)
     (cond
      ((cm-comment-p change)
@@ -818,7 +820,7 @@ interactively or not."
   (interactive "p") ; we use "p" to signal that the function was called interactively
   (let ((change (cm-markup-at-point)))
     (when change
-      (setq change (cm-expand-change change)) ; include highlight & comment into one change
+      (setq change (cm-merge-comment change)) ; include highlight & comment into one change
       (move-overlay cm-current-markup-overlay (cl-third change) (cl-fourth change))
       (let ((action (cond
                      ((memq (car change) '(cm-addition cm-deletion cm-substitution))
@@ -885,7 +887,7 @@ substitutions, `d' for comments and highlights."
 (defun cm-forward-out-of-change ()
   "Move forward out of the change at point."
   (interactive)
-  (let ((change (cm-expand-change (cm-markup-at-point))))
+  (let ((change (cm-merge-comment (cm-markup-at-point))))
     (if change
         (goto-char (cl-fourth change)))))
 
