@@ -1,6 +1,6 @@
 ;;; cm-mode.el --- Minor mode for CriticMarkup
 
-;; Copyright (c) 2013-2016 Joost Kremers
+;; Copyright (c) 2013-2024 Joost Kremers
 
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
