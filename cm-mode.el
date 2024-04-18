@@ -114,19 +114,19 @@ The value is actually a list consisting of the text and a flag
 indicating whether the deletion was done with the backspace
 key.")
 
-(defvar cm-addition-regexp "\\(?:{\\+\\+\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?\\)\\+\\+}\\)"
+(defvar cm-addition-regexp "\\(?:{\\+\\+\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\|[[:space:]]\\)*?\\)\\+\\+}\\)"
   "CriticMarkup addition regexp.")
 
-(defvar cm-deletion-regexp "\\(?:{--\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?\\)--}\\)"
+(defvar cm-deletion-regexp "\\(?:{--\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\|[[:space:]]\\)*?\\)--}\\)"
   "CriticMarkup deletion regexp.")
 
-(defvar cm-substitution-regexp "\\(?:{~~\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?\\)~>\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?\\)~~}\\)"
+(defvar cm-substitution-regexp "\\(?:{~~\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\|[[:space:]]\\)*?\\)~>\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?\\)~~}\\)"
   "CriticMarkup substitution regexp.")
 
-(defvar cm-comment-regexp "\\(?:{>>\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?\\)<<}\\)"
+(defvar cm-comment-regexp "\\(?:{>>\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\|[[:space:]]\\)*?\\)<<}\\)"
   "CriticMarkup comment regexp.")
 
-(defvar cm-highlight-regexp "\\(?:{==\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?\\)==}\\)"
+(defvar cm-highlight-regexp "\\(?:{==\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\|[[:space:]]\\)*?\\)==}\\)"
   "CriticMarkup highlight regexp.")
 
 (defvar cm-current-markup-overlay nil
