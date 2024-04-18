@@ -84,4 +84,3 @@ You can activate and deactivate follow changes mode with `C-c * F`. When it's ac
 
 ![Emacs CriticMarkup](Emacs_CriticMarkup.png)
 
-(Yes, I use a variable-width font in my Markdown buffers.)
