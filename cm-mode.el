@@ -776,12 +776,12 @@ CHANGE matches `cm-author'; if CHANGE has no author; or if
         (string= author cm-author))))
 
 (defun cm-merge-comment (change)
-  "Merge CHANGE with a following comment.
-CHANGE is a list as returned by `cm-markup-at-point'.  If there
-is a comment following CHANGE, return an updated list that
-contains both CHANGE and the comment.  If CHANGE is a comment
-itself, check if there's another change preceding it and include
-it."
+  "Merge CHANGE and an adjacent comment.
+CHANGE is a list as returned by `cm-markup-at-point'.  Check if
+there is a comment following CHANGE, or, if CHANGE is a comment
+itself, check if there is a change preceding CHANGE.  If there
+is, return an updated list that contains both.  If CHANGE is nil,
+return nil."
   (unless (not change)
     (cond
      ((cm-comment-p change)
