@@ -202,6 +202,8 @@ and reactivate `cm-mode'."
 (defvar cm-highlight-face 'cm-highlight-face
   "CriticMarkup highlight face.")
 
+;;; Create markup predicates.
+
 (eval-and-compile
   (defvar cm-delimiters '((cm-addition "{++" "++}")
                         (cm-deletion "{--" "--}")
@@ -210,7 +212,6 @@ and reactivate `cm-mode'."
                         (cm-highlight "{==" "==}"))
     "CriticMarkup delimiters."))
 
-;; create markup predicates
 (eval-and-compile
   (mapc #'(lambda (markup)
             (fset (intern (concat (symbol-name markup) "-p"))
@@ -226,7 +227,7 @@ and reactivate `cm-mode'."
 This keymap contains only one binding: `C-c *', which is bound to
 `cm-prefix-map', the keymap that holds the actual key bindings.")
 
-(defvar cm-prefix-map)  ; mainly to silence the byte compiler
+(defvar cm-prefix-map)  ; Mainly to silence the byte compiler.
 (define-prefix-command 'cm-prefix-map)
 (define-key cm-prefix-map "a" #'cm-addition)
 (define-key cm-prefix-map "d" #'cm-deletion)
@@ -260,7 +261,7 @@ This keymap contains only one binding: `C-c *', which is bound to
   "Minor mode for CriticMarkup."
   :init-value nil :lighter (:eval (concat " CM" (if cm-author (concat "@" cm-author)) (if cm-follow-changes "*"))) :global nil
   (cond
-   (cm-mode                             ; cm-mode is turned on
+   (cm-mode                             ; `cm-mode' is turned on.
     (setq font-lock-multiline t)
     (font-lock-add-keywords nil (cm-font-lock-keywords) t)
     (when cm-read-only-annotations
@@ -269,30 +270,32 @@ This keymap contains only one binding: `C-c *', which is bound to
     (cm-font-lock-ensure)
     (setq cm-current-markup-overlay (make-overlay 1 1))
     (overlay-put cm-current-markup-overlay 'face 'highlight))
-   ((not cm-mode)                       ; cm-mode is turned off
+   ((not cm-mode)                       ; `cm-mode' is turned off.
     (font-lock-remove-keywords nil (cm-font-lock-keywords))
     (setq font-lock-extra-managed-props (delq 'read-only (delq 'rear-nonsticky font-lock-extra-managed-props)))
     (let ((modified (buffer-modified-p)))
-      (cm-make-markups-writable) ; we need to remove the read-only property by hand; it's cumbersome to do it with font-lock
+      (cm-make-markups-writable)  ; We need to remove the read-only property by hand; it's cumbersome to do it with font-lock.
       (unless modified
-        (set-buffer-modified-p nil)))   ; removing text properties marks the buffer as modified, so we may need to adjust
     (cm-font-lock-ensure)
+        (set-buffer-modified-p nil)))  ; Removing text properties marks the buffer as modified, so we may need to adjust.
     (remove-overlays))))
+
+;;; Font lock
 
 (defun cm-font-lock-for-markup (type)
   "Create a font lock entry for markup TYPE."
   (let ((markup (cdr type))
         (face (intern (concat (symbol-name (car type)) "-face")))
         font-lock)
-    (add-to-list 'font-lock (mapconcat #'(lambda (elt) ; first we create the regexp to match
+    (add-to-list 'font-lock (mapconcat #'(lambda (elt)  ; First we create the regexp to match.
                                            (regexp-opt (list elt) t))
                                        markup
                                        "\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?"))
-    (add-to-list 'font-lock `(0 ,face prepend) t) ; the highlighter for the entire change
+    (add-to-list 'font-lock `(0 ,face prepend) t)  ; The highlighter for the entire change.
     (dotimes (n (length markup))
       (when cm-read-only-annotations
-	(add-to-list 'font-lock `(,(1+ n) '(face ,face read-only t)) t) ; make the tags read-only
-	(add-to-list 'font-lock `("." (progn ; and make the read-only property of the final character rear-nonsticky
+	(add-to-list 'font-lock `(,(1+ n) '(face ,face read-only t)) t)  ; Make the tags read-only.
+	(add-to-list 'font-lock `("." (progn  ; And make the read-only property of the final character rear-nonsticky
 					(goto-char (1- (match-end ,(1+ n))))
 					(1+ (point)))
 				  nil
@@ -324,6 +327,8 @@ This keymap contains only one binding: `C-c *', which is bound to
   "Return a list of font lock keywords."
   (mapcar #'cm-font-lock-for-markup cm-delimiters))
 
+;;; Follow Changes
+
 (defun cm-follow-changes (&optional arg)
   "Activate follow changes mode.
 If ARG is positive, activate follow changes mode, if ARG is 0 or
@@ -349,10 +354,10 @@ changes mode."
 BEG and END are the beginning and the end of the region to be
 changed."
   (unless (or undo-in-progress
-              (and (= beg (point-min)) (= end (point-max)))) ; this happens on buffer switches
-    (if (= beg end)                   ; addition
+              (and (= beg (point-min)) (= end (point-max))))  ; This happens on buffer switches.
+    (if (= beg end)  ; Addition.
         (cm-make-addition (cm-markup-at-point))
-      ;; when the deletion was done with backspace, point is at end.
+      ;; When the deletion was done with backspace, point is at end.
       (setq cm-current-deletion (list (buffer-substring beg end) (= (point) end))))))
 
 (defun cm-after-change (beg end length)
@@ -443,7 +448,7 @@ BEG and END delimit the region to be deleted."
   (interactive "r")
   (let ((change (cm-markup-at-point)))
     (when (cm-point-inside-change-p change)
-      (error "Cannot make a deletion here")) ; TODO we should check whether the region contains markup.
+      (error "Cannot make a deletion here"))  ; TODO We should check whether the region contains markup.
     (when (use-region-p)
       (cm-without-following-changes
         (cm-make-deletion (delete-and-extract-region beg end))))))
@@ -470,7 +475,7 @@ TEXT is the text that's being deleted.
 
 If BACKSPACE is T, the deletion was done with the backspace key;
 point will then be left before the deletion markup."
-  ;; TODO: we should check whether the text to be deleted contains part of
+  ;; TODO: We should check whether the text to be deleted contains part of
   ;; a change.
   (let ((change (cm-merge-comment (cm-markup-at-point))))
     (unless (cm-point-inside-change-p change)
@@ -480,7 +485,7 @@ point will then be left before the deletion markup."
             (cm-insert-markup 'cm-deletion text)
           (cm-move-into-markup 'cm-deletion)
           (insert text)))
-      ;; the save-excursion leaves point at the start of the deletion markup
+      ;; `save-excursion' leaves point at the start of the deletion markup.
       (unless backspace
         (cm-forward-out-of-change)))))
 
@@ -489,7 +494,7 @@ point will then be left before the deletion markup."
 BEG and END delimit the text to be substituted."
   (interactive "r")
   (when (cm-point-inside-change-p (cm-markup-at-point))
-    (error "Cannot make a substitution here")) ; TODO we should check whether the region contains markup.
+    (error "Cannot make a substitution here"))  ; TODO We should check whether the region contains markup.
   (cm-without-following-changes
     (let ((text (delete-and-extract-region beg end)))
       (cm-insert-markup 'cm-substitution text)
@@ -510,7 +515,7 @@ the comment is added after it."
         (cond
          (change
           (cm-end-of-markup (car change)))
-         ;; note: we do not account for the possibility that the region
+         ;; Note: we do not account for the possibility that the region
          ;; contains a change but point is outside of it...
          ((use-region-p)
           (setq text (delete-and-extract-region beg end))))
@@ -554,27 +559,27 @@ of a markup, it moves to the end of the next markup of the same
 type."
   (or n (setq n 1))
   (cond
-   ((> n 0)                             ; moving forward
-    (let ((delim (cm-last1 (assq type cm-delimiters))))
+   ((> n 0)  ; Moving forward.
+    (let ((delim (car (last (assq type cm-delimiters)))))
       (backward-char (- (length delim) (or (cm-point-at-delim delim t t)
-                                           (length delim)))) ; adjust point if it's inside a delim
+                                           (length delim))))  ; Adjust point if it's inside a delimiter.
       (re-search-forward (regexp-quote delim) nil t n)))
-   (t                                   ; moving backward
+   (t  ; Moving backward.
     (let ((delim (cl-second (assq type cm-delimiters))))
       (forward-char (- (length delim) (or (cm-point-at-delim delim nil t)
-                                          (length delim)))) ; adjust point if it's inside a delim
+                                          (length delim))))  ; Adjust point if it's inside a delimiter.
       (re-search-backward (regexp-quote delim) nil t (abs n))))))
 
 (defun cm-beginning-of-markup (type)
   "Move to the beginning of a markup of TYPE."
-  ;; first move out of the delimiter, if we're in one.
+  ;; First move out of the delimiter, if we're in one.
   (cm-move-past-delim (cl-second (assq type cm-delimiters)))
   (cm-forward-markup type -1))
 
 (defun cm-end-of-markup (type)
   "Move to the end of a markup of TYPE."
-  ;; first move out of the delimiter, if we're in one.
-  (cm-move-past-delim (cm-last1 (assq type cm-delimiters)) t)
+  ;; First move out of the delimiter, if we're in one.
+  (cm-move-past-delim (car (last (assq type cm-delimiters))) t)
   (cm-forward-markup type))
 
 (defun cm-move-past-delim (delim &optional end)
@@ -708,20 +713,6 @@ is not included."
                    (cm-end-of-markup type)
                    (point))))
         (list beg end))))
-
-;; (defun cm-markup-at-point (&optional backward)
-;;   "Find the markup at point.
-;; Return a list of the form (TYPE TEXT START-POS END-POS), or NIL
-;; if point is not at a markup.
-
-;; Note that if point is in between two markups, this function
-;; returns the one that follows point, unless BACKWARD is non-NIL."
-;;   (let ((type (catch 'found
-;;                 (dolist (type (mapcar #'car cm-delimiters))
-;;                   (when (thing-at-point type)
-;;                     (throw 'found type))))))
-;;     (when type
-;;       (append (list type) (list (thing-at-point type)) (cm-bounds-of-markup-at-point type)))))
 
 (defun cm-markup-at-point (&optional backward)
   "Find the markup at point.
