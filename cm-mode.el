@@ -575,8 +575,9 @@ type."
 
 (defun cm-move-past-delim (delim &optional end)
   "Move point past DELIM into the markup.
-If DELIM is an end delimiter, END must be T. If point is not at a
-delimiter, do not move.  Return T if point has moved."
+DELIM must be one of the strings in `cm-delimiters'.  If DELIM is
+an end delimiter, END must be t. If point is not at a delimiter,
+do not move.  Return t if point has moved."
   (let ((len (length delim))
         (pos (point)))
     (if end
