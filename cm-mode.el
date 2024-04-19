@@ -463,7 +463,7 @@ sure point is not in the delimiter before adding text."
   "Reinsert TEXT into the buffer and add deletion markup if necessary.
 TEXT is the text that's being deleted.
 
-If BACKSPACE is T, the deletion was done with the backspace key;
+If BACKSPACE is t, the deletion was done with the backspace key;
 point will then be left before the deletion markup."
   ;; TODO: We should check whether the text to be deleted contains part of
   ;; a change.
@@ -592,7 +592,7 @@ backward if at a closing delimiter.  When moving backward, point
 is moved past a comment if the change before the comment is of
 TYPE.
 
-If BACKWARDS is T, only try moving backwards."
+If BACKWARDS is t, only try moving backwards."
   (unless (and (not backwards)
                (cm-move-past-delim (cl-second (assq type cm-delimiters))))
     (if (and (not (eq type 'cm-comment))
@@ -726,7 +726,7 @@ returns the one that follows point, unless BACKWARD is non-NIL."
       (append (list type) (list (thing-at-point type)) (cm-bounds-of-markup-at-point type)))))
 
 (defun cm-point-inside-change-p (change)
-  "Return T if point is inside CHANGE.
+  "Return t if point is inside CHANGE.
 CHANGE is a change as returned by `cm-markup-at-point'.  Point is
 within a change if it's inside the curly braces, not directly
 outside of them.  The latter counts as being AT a change."
@@ -754,7 +754,7 @@ CHANGE has no comment part or a comment without an author."
         (match-string 1 comment))))
 
 (defun cm-has-current-author-p (change)
-  "Return T if the user is the author of CHANGE.
+  "Return t if the user is the author of CHANGE.
 The user is considered the author of CHANGE if the author tag of
 CHANGE matches `cm-author'; if CHANGE has no author; or if
 `cm-author' is NIL."
