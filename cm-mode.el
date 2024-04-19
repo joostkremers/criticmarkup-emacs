@@ -289,7 +289,8 @@ This keymap contains only one binding: `C-c *', which is bound to
 					(goto-char (1- (match-end ,(1+ n))))
 					(1+ (point)))
 				  nil
-				  (0 '(face ,face rear-nonsticky (read-only)))) t)))
+				  (0 '(face ,face rear-nonsticky (read-only))))
+                     t)))
     font-lock))
 
 ;; `cm-font-lock-for-markup' produces a font-lock entry that can be given
