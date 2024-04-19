@@ -203,10 +203,10 @@ and reactivate `cm-mode'."
     "CriticMarkup delimiters."))
 
 (eval-and-compile
-  (mapc #'(lambda (markup)
-            (fset (intern (concat (symbol-name markup) "-p"))
-                  `(lambda (change)
-                     (eq (car change) (quote ,markup)))))
+  (mapc (lambda (markup)
+          (fset (intern (concat (symbol-name markup) "-p"))
+                `(lambda (change)
+                   (eq (car change) (quote ,markup)))))
         (mapcar #'car cm-delimiters)))
 
 (defvar cm-mode-map
