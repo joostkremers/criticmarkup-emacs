@@ -392,7 +392,7 @@ of the affected text."
 
 (defun cm-insert-markup (type &optional text)
   "Insert CriticMarkup of TYPE.
-Also insert TEXT if non-NIL.  For deletions, TEXT is the deleted
+Also insert TEXT if non-nil.  For deletions, TEXT is the deleted
 text; for substitutions, the text to be substituted; for
 comments, the text to be highlighted.
 
@@ -525,18 +525,18 @@ the comment is added after it."
         (cm-move-into-markup 'cm-comment)))))
 
 (defun cm-point-at-delim (delim &optional end strict)
-  "Return non-NIL if point is at delimiter DELIM.
+  "Return non-nil if point is at delimiter DELIM.
 DELIM should be one of the strings in `cm-delimiters'.  If DELIM
 is an end delimiter, optional argument END must be t.
 
 Point counts as being at DELIM if it is in a delimiter or
 directly outside, but not when it is directly inside.  So `|{++',
 `{|++', `{+|+', return 0, 1, and 2 respectively, while `{++|'
-returns NIL.  Similarly, `++}|', `++|}', `+|+}' return 0, 1, and
-2, while `|++}' returns NIL.
+returns nil.  Similarly, `++}|', `++|}', `+|+}' return 0, 1, and
+2, while `|++}' returns nil.
 
-If STRICT is non-NIL, point must be inside the delimiter.  That
-is, instead of 0, the return value will be NIL."
+If STRICT is non-nil, point must be inside the delimiter.  That
+is, instead of 0, the return value will be nil."
   (save-excursion
     (if end
         (let ((distance (skip-chars-forward (substring delim 1) (+ (point) 2))))
@@ -700,7 +700,7 @@ If N is negative, move backward."
 (defun cm-bounds-of-markup-at-point (type)
   "Return the bounds of markup TYPE at point.
 The return value is a list of the form (START-POS END-POS).  If
-point is not within a markup of TYPE, return NIL.
+point is not within a markup of TYPE, return nil.
 
 TYPE is one of `cm-addition', `cm-deletion', `cm-substitution',
 `cm-comment', or `cm-highlight'.  Note that in the case of
@@ -718,11 +718,11 @@ is not included."
 
 (defun cm-markup-at-point (&optional backward)
   "Find the markup at point.
-Return a list of the form (TYPE TEXT START-POS END-POS), or NIL
+Return a list of the form (TYPE TEXT START-POS END-POS), or nil
 if point is not at a markup.
 
 Note that if point is in between two markups, this function
-returns the one that follows point, unless BACKWARD is non-NIL."
+returns the one that follows point, unless BACKWARD is non-nil."
   (let* ((types (delq nil (mapcar #'(lambda (tp)
                                       (if (thing-at-point tp)
                                           tp))
@@ -769,7 +769,7 @@ CHANGE has no comment part or a comment without an author."
   "Return t if the user is the author of CHANGE.
 The user is considered the author of CHANGE if the author tag of
 CHANGE matches `cm-author'; if CHANGE has no author; or if
-`cm-author' is NIL."
+`cm-author' is nil."
   (let ((author (cm-extract-author change)))
     (or (not cm-author)
         (not author)
