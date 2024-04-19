@@ -894,7 +894,8 @@ substitutions, `d' for comments and highlights."
   (funcall (if (> n 0)
                #'re-search-forward
              #'re-search-backward)
-           (regexp-opt (mapcar #'cl-second cm-delimiters)) nil t (abs n)))
+           (regexp-opt (mapcar #'cl-second cm-delimiters))
+           nil t (abs n)))
 
 (defun cm-backward-change (&optional n)
   "Move backward to the N'th preceding change."
