@@ -231,7 +231,7 @@ This keymap contains only one binding: `C-c *', which is bound to
 (define-key cm-prefix-map "t" #'cm-set-author)
 (define-key cm-prefix-map "F" #'cm-follow-changes)
 
-(easy-menu-define cm-mode-menu cm-mode-map "CriticMarkup Menu"
+(easy-menu-define cm-mode-menu cm-mode-map "CriticMarkup Menu."
   '("CriticMarkup"
     ["Addition" cm-addition t]
     ["Deletion" cm-deletion t]
