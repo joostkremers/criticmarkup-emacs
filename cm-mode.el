@@ -362,7 +362,7 @@ BEG and END mark the region to be changed, LENGTH is the length
 of the affected text."
   (unless (or undo-in-progress
               (not cm-current-deletion))
-    (apply 'cm-make-deletion cm-current-deletion)
+    (apply #'cm-make-deletion cm-current-deletion)
     (setq cm-current-deletion nil)))
 
 (defmacro cm-without-following-changes (&rest body)
@@ -897,8 +897,8 @@ substitutions, `d' for comments and highlights."
   (interactive "p")
   (or n (setq n 1))
   (funcall (if (> n 0)
-               're-search-forward
-             're-search-backward)
+               #'re-search-forward
+             #'re-search-backward)
            (regexp-opt (mapcar #'cl-second cm-delimiters)) nil t (abs n)))
 
 (defun cm-backward-change (&optional n)
