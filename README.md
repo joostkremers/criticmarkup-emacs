@@ -71,7 +71,7 @@ By default, `cm-mode` uses `C-c *` as a prefix to all the commands it defines. I
 
 ## Follow changes mode ##
 
-`cm-mode` also provides a simple 'follow changes' mode. When activated, changes you make to the buffer are automatically marked as insertions or deletions. Substitutions cannot be made automatically. Even with `delete-selection-mode`, if you mark a word and then overwrite it, it will still be marked as a sequence of deletion+insertion, not as a substitution), but they can still be made manually with `C-c * s`.
+`cm-mode` also provides a simple 'follow changes' mode. When activated, changes you make to the buffer are automatically marked as insertions or deletions. Substitutions cannot be made automatically (even with `delete-selection-mode`, if you mark a word and then overwrite it, it will still be marked as a sequence of deletion+insertion, not as a substitution), but they can still be made manually with `C-c * s`.
 
 You can activate and deactivate follow changes mode with `C-c * F`. When it's active, the modeline indicator for `cm-mode` changes from `CM` to `CM*`. Note that some changes are not (properly) recorded, so to what extent this mode is useful very much depends on your needs.
 
