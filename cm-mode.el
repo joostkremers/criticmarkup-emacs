@@ -515,10 +515,11 @@ the comment is added after it."
         (cm-move-into-markup 'cm-comment)))))
 
 (defun cm-point-at-delim (delim &optional end strict)
-  "Return non-NIL if point is at a delimiter.
-If DELIM is an end delimiter, optional argument END must be T.
+  "Return non-NIL if point is at delimiter DELIM.
+DELIM should be one of the strings in `cm-delimiters'.  If DELIM
+is an end delimiter, optional argument END must be t.
 
-Point counts as being at delim if it is in a delimiter or
+Point counts as being at DELIM if it is in a delimiter or
 directly outside, but not when it is directly inside.  So `|{++',
 `{|++', `{+|+', return 0, 1, and 2 respectively, while `{++|'
 returns NIL.  Similarly, `++}|', `++|}', `+|+}' return 0, 1, and
