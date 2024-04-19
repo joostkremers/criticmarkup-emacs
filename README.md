@@ -51,11 +51,11 @@ You can jump to the previous/next change with the commands `C-c * b` and `C-c * 
 
 ## Accepting or rejecting changes ##
 
-You can interactively accept or reject a change by putting the cursor inside it and hitting `C-c * i`. For additions, deletions and substitutions, you get a choice between `a` to accept the change or `r` to reject it. There are two other choices, `s` to skip this change or `q` to quit, which both leave the change untouched. If you're just dealing with the change at point, they are essentially identical, but they have different functions when accepting or rejecting all changes interactively.
+You can interactively accept or reject a change by putting the cursor inside it and hitting `C-c * i`. For additions, deletions and substitutions, you get a choice between `a` to accept the change or `r` to reject it, or `s` to skip this change, which leaves the change untouched.
 
-For comments and highlights, the choices are different: `d` to delete the comment or highlight (whereby the latter of course retains the highlighted text, but the comment and the markup are removed), or `s` to skip the comment or highlight. Again `q` quits and is essentially identical to `s`.
+For comments and highlights, the choices are different: `d` to delete the comment or highlight (the text of the highlight is retained, of course), or `s` to skip the comment or highlight.
 
-You can interactively accept or reject all changes with `C-c * I` (that is a capital `i`). This will go through each change asking you what you want to do with it. Here, `s` skips the current change and moves on to the next one, while typing `q` leaves the current change alone and quits the accept/reject session.
+You can interactively accept or reject all changes with `C-c * I` (that is a capital `i`). This will go through each change asking you what you want to do with it. Here, `s` skips the current change and moves on to the next one. In addition, you can type `q`, leaves the current change alone and quits the accept/reject session.
 
 
 ## Key bindings ##

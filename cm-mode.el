@@ -809,11 +809,10 @@ it."
 
 (defun cm-accept/reject-change-at-point (&optional interactive)
   "Accept or reject change at point interactively.
-
-Return point if the change is accepted or rejected or the
-position after the change if it is skipped (point is not changed
-in that case).  If no change is found at point, the return value
-is nil.
+If the change is accepted or rejected, return point.  If the
+change it is skipped, return or the position after the
+change (point is not altered in that case).  If no change is
+found at point, the return value is nil.
 
 INTERACTIVE is used to determine whether the function was called
 interactively or not."
@@ -824,12 +823,14 @@ interactively or not."
       (move-overlay cm-current-markup-overlay (cl-third change) (cl-fourth change))
       (let ((action (cond
                      ((memq (car change) '(cm-addition cm-deletion cm-substitution))
-                      (read-char-choice (format "%s: (a)ccept/(r)eject/(s)kip/(q)uit? "
-                                                (capitalize (substring (symbol-name (car change)) 3)))
+                      (read-char-choice (format "%s: (a)ccept/(r)eject/(s)kip%s? "
+                                                (capitalize (substring (symbol-name (car change)) 3))
+                                                (if interactive "" "/(q)uit"))
                                         '(?a ?r ?s ?q) t))
                      ((memq (car change) '(cm-comment cm-highlight))
-                      (read-char-choice (format "%s: (d)elete/(s)kip/(q)uit? "
-                                                (capitalize (substring (symbol-name (car change)) 3)))
+                      (read-char-choice (format "%s: (d)elete/(s)kip%s? "
+                                                (capitalize (substring (symbol-name (car change)) 3))
+                                                (if interactive "" "/(q)uit"))
                                         '(?d ?s ?q) t)))))
         (delete-overlay cm-current-markup-overlay)
         (when (and (not interactive) (eq action ?q)) ; if the user aborted
