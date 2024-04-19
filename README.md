@@ -57,7 +57,7 @@ You can interactively accept or reject a change by putting the cursor inside it 
 
 For comments and highlights, the choices are different: `d` to delete the comment or highlight (the text of the highlight is retained, of course), or `s` to skip the comment or highlight.
 
-You can interactively accept or reject all changes with `C-c * I` (that is a capital `i`). This will go through each change asking you what you want to do with it. Here, `s` skips the current change and moves on to the next one. In addition, you can type `q`, leaves the current change alone and quits the accept/reject session.
+You can interactively accept or reject all changes with `C-c * I` (that is a capital `i`). This will go through each change asking you what you want to do with it. Here, `s` skips the current change and moves on to the next one. In addition, you can type `q`, which leaves the current change alone and quits the accept/reject session.
 
 
 ## Key bindings ##
