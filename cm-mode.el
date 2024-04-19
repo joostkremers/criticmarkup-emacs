@@ -826,8 +826,8 @@ interactively or not."
                                                 (if interactive "" "/(q)uit"))
                                         '(?d ?s ?q) t)))))
         (delete-overlay cm-current-markup-overlay)
-        (when (and (not interactive) (eq action ?q)) ; if the user aborted
-          (throw 'quit nil))                         ; get out
+        (when (and (not interactive) (eq action ?q))  ; If the user aborted,
+          (throw 'quit nil))                          ; get out.
         (cond
          ((memq action '(?a ?r ?d))
           (let ((inhibit-read-only t))
@@ -844,9 +844,9 @@ ACTION is a character, either `a' (accept), `r' (reject), or
 `d' (delete).  `a' and `r' are valid for additions, deletions and
 substitutions, `d' for comments and highlights."
   (when (eq action ?r)
-    (setq action nil)) ; so we can use a simple `if' rather than a `cond'
+    (setq action nil))  ; When rejecting a change, we don't need to do anything.
   (let ((type (cl-first change))
-        (text (delete ?\n (cl-second change)))) ; delete newlines because they mess up string-match below.
+        (text (delete ?\n (cl-second change))))  ; Delete newlines because they mess up string-match below.
     (cond
      ((eq type 'cm-addition)
       (if (not action)
@@ -877,6 +877,8 @@ substitutions, `d' for comments and highlights."
     (while (cm-forward-change)
       (let ((pos (cm-accept/reject-change-at-point)))
         (when pos (goto-char pos)))))) ; move to the end of current change
+
+;;; Navigation
 
 (defun cm-forward-out-of-change ()
   "Move forward out of the change at point."
