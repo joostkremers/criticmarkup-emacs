@@ -231,6 +231,15 @@ This keymap contains only one binding: `C-c *', which is bound to
 (define-key cm-prefix-map "t" #'cm-set-author)
 (define-key cm-prefix-map "F" #'cm-follow-changes)
 
+(defvar cm-mode-repeat-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "f") #'cm-forward-change)
+    (define-key map (kbd "b") #'cm-backward-change)
+    map)
+  "Repeat keymap for `cm-mode'.")
+(put 'cm-forward-change 'repeat-map 'cm-mode-repeat-map)
+(put 'cm-backward-change 'repeat-map 'cm-mode-repeat-map)
+
 (easy-menu-define cm-mode-menu cm-mode-map "CriticMarkup Menu."
   '("CriticMarkup"
     ["Addition" cm-addition t]

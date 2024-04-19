@@ -46,7 +46,9 @@ Note that the modeline shows the buffer's author tag: if `cm-author` is set, the
 
 ## Navigating changes ##
 
-You can jump to the previous/next change with the commands `C-c * b` and `C-c * f`, respectively. If point is inside a change, you can jump out of it with `C-c * *`.
+If point is inside a change, you can jump out of it with `C-c * *`. Point will be placed after the closing delimiter. If you are in a change that has a comment, point will be placed after the comment.
+
+You can jump to the previous/next change with the commands `C-c * b` and `C-c * f`, respectively. These work from anywhere in the buffer, not just when point is inside a change. If `repeat-mode` is enabled, these commands are repeatable with `f` and `b`, respectively.
 
 
 ## Accepting or rejecting changes ##
