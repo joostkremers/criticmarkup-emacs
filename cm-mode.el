@@ -7,7 +7,7 @@
 ;; Created: 14 Feb 2013
 ;; Version: 1.7
 ;; Keywords: text, markdown
-;; Package-Requires: ((cl-lib "0.5"))
+;; Package-Requires: ((emacs "25.1") (cl-lib "0.5"))
 
 ;; Redistribution and use in source and binary forms, with or without
 ;; modification, are permitted provided that the following conditions
@@ -93,12 +93,6 @@
 
 (require 'thingatpt)
 (require 'cl-lib)
-
-;; Add a compatibility function for Emacs 24.
-(defalias 'cm-font-lock-ensure (if (fboundp 'font-lock-ensure)
-                                 'font-lock-ensure
-                               'font-lock-fontify-buffer)
-  "Compatibility function for Emacs 24.")
 
 (defvar cm-follow-changes nil
   "Flag indicating whether follow changes mode is active.")
@@ -263,7 +257,7 @@ This keymap contains only one binding: `C-c *', which is bound to
     (when cm-read-only-annotations
       (add-to-list 'font-lock-extra-managed-props 'read-only))
     (add-to-list 'font-lock-extra-managed-props 'rear-nonsticky)
-    (cm-font-lock-ensure)
+    (font-lock-ensure)
     (setq cm-current-markup-overlay (make-overlay 1 1))
     (overlay-put cm-current-markup-overlay 'face 'highlight))
    ((not cm-mode)                       ; `cm-mode' is turned off.
@@ -272,8 +266,8 @@ This keymap contains only one binding: `C-c *', which is bound to
     (let ((modified (buffer-modified-p)))
       (cm-make-markups-writable)  ; We need to remove the read-only property by hand; it's cumbersome to do it with font-lock.
       (unless modified
-    (cm-font-lock-ensure)
         (set-buffer-modified-p nil)))  ; Removing text properties marks the buffer as modified, so we may need to adjust.
+    (font-lock-ensure)
     (remove-overlays))))
 
 ;;; Font lock
