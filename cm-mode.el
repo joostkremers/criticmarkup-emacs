@@ -100,10 +100,6 @@
                                'font-lock-fontify-buffer)
   "Compatibility function for Emacs 24.")
 
-(defsubst cm-last1 (list)
-  "Return the last element of LIST."
-  (car (last list)))
-
 (defvar cm-follow-changes nil
   "Flag indicating whether follow changes mode is active.")
 (make-variable-buffer-local 'cm-follow-changes)
@@ -383,7 +379,7 @@ of the affected text."
     (let ((delims-regexp (concat (regexp-opt (mapcar #'cl-second cm-delimiters) t)
                                  "\\([[:ascii:]]\\|[[:nonascii:]]\\)*?"
                                  "\\(?:\\(~>\\)\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\)?"
-                                 (regexp-opt (mapcar #'cm-last1 cm-delimiters) t)))
+                                 (regexp-opt (mapcar (lambda (e) (car (last e))) cm-delimiters) t)))
           (inhibit-read-only t))
       (while (re-search-forward delims-regexp nil t)
         (dolist (n '(1 2 3))
@@ -404,7 +400,7 @@ starts with `cm-author'."
   (let* ((delims (cdr (assq type cm-delimiters)))
          (bdelim (cl-first delims))
          (middle (if (cl-third delims) (cl-second delims))) ; "~>" for cm-substitution, otherwise nil
-         (edelim (cm-last1 delims)))
+         (edelim (car (last delims))))
     (insert (or bdelim "")
             (or text (if (and (eq type 'cm-comment)
                               cm-author)
@@ -608,7 +604,7 @@ If BACKWARDS is T, only try moving backwards."
     (if (and (not (eq type 'cm-comment))
              (cm-comment-p (cm-markup-at-point t)))
         (cm-forward-markup 'cm-comment -1))
-    (cm-move-past-delim (cm-last1 (assq type cm-delimiters)) t)))
+    (cm-move-past-delim (car (last (assq type cm-delimiters))) t)))
 
 (defun cm-forward-addition (&optional n)
   "Move forward N addition markups.
@@ -747,7 +743,7 @@ outside of them.  The latter counts as being AT a change."
 (defun cm-extract-comment (change)
   "Extract the comment from CHANGE."
   (let ((bdelim (regexp-quote (cl-second (assq 'cm-comment cm-delimiters))))
-        (edelim (regexp-quote (cm-last1 (assq 'cm-comment cm-delimiters))))
+        (edelim (regexp-quote (car (last (assq 'cm-comment cm-delimiters)))))
         (text (cl-second change)))
     (if (string-match (concat bdelim "\\(\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\)" edelim) text)
         (match-string 1 text))))
