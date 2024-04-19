@@ -196,10 +196,10 @@ and reactivate `cm-mode'."
 
 (eval-and-compile
   (defvar cm-delimiters '((cm-addition "{++" "++}")
-                        (cm-deletion "{--" "--}")
-                        (cm-substitution "{~~" "~>" "~~}")
-                        (cm-comment "{>>" "<<}")
-                        (cm-highlight "{==" "==}"))
+                          (cm-deletion "{--" "--}")
+                          (cm-substitution "{~~" "~>" "~~}")
+                          (cm-comment "{>>" "<<}")
+                          (cm-highlight "{==" "==}"))
     "CriticMarkup delimiters."))
 
 (eval-and-compile
