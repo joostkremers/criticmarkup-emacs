@@ -94,16 +94,6 @@
 (require 'thingatpt)
 (require 'cl-lib)
 
-(defvar cm-follow-changes nil
-  "Flag indicating whether follow changes mode is active.")
-(make-variable-buffer-local 'cm-follow-changes)
-
-(defvar cm-current-deletion nil
-  "The deleted text in follow changes mode.
-The value is actually a list consisting of the text and a flag
-indicating whether the deletion was done with the backspace
-key.")
-
 (defvar cm-addition-regexp "\\(?:{\\+\\+\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?\\)\\+\\+}\\)"
   "CriticMarkup addition regexp.")
 
@@ -328,6 +318,16 @@ This keymap contains only one binding: `C-c *', which is bound to
   (mapcar #'cm-font-lock-for-markup cm-delimiters))
 
 ;;; Follow Changes
+
+(defvar cm-follow-changes nil
+  "Flag indicating whether follow changes mode is active.")
+(make-variable-buffer-local 'cm-follow-changes)
+
+(defvar cm-current-deletion nil
+  "The deleted text in follow changes mode.
+The value is actually a list consisting of the text and a flag
+indicating whether the deletion was done with the backspace
+key.")
 
 (defun cm-follow-changes (&optional arg)
   "Activate follow changes mode.
