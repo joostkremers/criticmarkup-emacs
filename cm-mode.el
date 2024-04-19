@@ -5,7 +5,7 @@
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 14 Feb 2013
-;; Version: 1.7
+;; Version: 1.8
 ;; Keywords: text, markdown
 ;; Package-Requires: ((emacs "25.1") (cl-lib "0.5"))
 
