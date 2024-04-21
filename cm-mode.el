@@ -357,7 +357,8 @@ changed."
               (and (= beg (point-min)) (= end (point-max))))  ; This happens on buffer switches.
     (if (= beg end)  ; Addition.
         (cm-make-addition (cm-markup-at-point))
-      ;; When the deletion was done with backspace, point is at end.
+      ;; When the deletion was done with backspace, point is at end. We record
+      ;; this in `cm-current-deletion' so we can position point correctly.
       (setq cm-current-deletion (list (buffer-substring beg end) (= (point) end))))))
 
 (defun cm-after-change (beg end length)
