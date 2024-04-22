@@ -199,6 +199,110 @@ and reactivate `cm-mode'."
                    (eq (car change) (quote ,markup)))))
         (mapcar #'car cm-delimiters)))
 
+;;; Font lock
+
+(defun cm-font-lock-for-markup (type)
+  "Create a font lock entry for markup TYPE."
+  (let ((markup (cdr type))
+        (face (intern (concat (symbol-name (car type)) "-face")))
+        font-lock)
+    (add-to-list 'font-lock (mapconcat #'(lambda (elt)  ; First we create the regexp to match.
+                                           (regexp-opt (list elt) t))
+                                       markup
+                                       "\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?"))
+    (add-to-list 'font-lock `(0 ,face prepend) t)  ; The highlighter for the entire change.
+    (dotimes (n (length markup))
+      (when cm-read-only-annotations
+	(add-to-list 'font-lock `(,(1+ n) '(face ,face read-only t)) t)  ; Make the tags read-only.
+	(add-to-list 'font-lock `("." (progn  ; And make the read-only property of the final character rear-nonsticky
+					(goto-char (1- (match-end ,(1+ n))))
+					(1+ (point)))
+				  nil
+				  (0 '(face ,face rear-nonsticky (read-only))))
+                     t)))
+    font-lock))
+
+;; `cm-font-lock-for-markup' produces a font-lock entry that can be given
+;; to `font-lock-add-keywords'. To illustrate, the entry it produces for
+;; additions is the following:
+;; ("\\({\\+\\+\\)\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?\\(\\+\\+}\\)"
+;;  (0 cm-addition-face prepend)
+;;  (1 '(face cm-addition-face read-only t))
+;;  ("." (progn (goto-char (1- (match-end 1)))
+;;              (1+ (point)))
+;;   nil
+;;   (0 '(face cm-addition-face rear-nonsticky (read-only))))
+;;  (2 '(face cm-addition-face read-only t))
+;;  ("." (progn (goto-char (1- (match-end 2)))
+;;              (1+ (point)))
+;;   nil
+;;   (0 '(face cm-addition-face rear-nonsticky (read-only)))))
+;;
+;; This does some nice magic: it highlights addition markups with
+;; cm-addition-face, it makes the tags themselves, `{++' and `++}', read-only, and
+;; it gives the last character of the tags the text property (rear-nonsticky
+;; (read-only)), so that it's possible to add characters after the tag.
+
+(defun cm-font-lock-keywords ()
+  "Return a list of font lock keywords."
+  (mapcar #'cm-font-lock-for-markup cm-delimiters))
+
+;;; Utility functions
+
+(defmacro cm-without-following-changes (&rest body)
+  "Execute BODY without following changes."
+  (declare (indent defun))
+  `(let ((inhibit-modification-hooks t))
+     ,@body))
+
+(defun cm-make-markups-writable ()
+  "Make all CM markup delimiters in the current buffer writable."
+  (save-excursion
+    (goto-char (point-min))
+    (let ((delims-regexp (concat (regexp-opt (mapcar #'cl-second cm-delimiters) t)
+                                 "\\([[:ascii:]]\\|[[:nonascii:]]\\)*?"
+                                 "\\(?:\\(~>\\)\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\)?"
+                                 (regexp-opt (mapcar (lambda (e) (car (last e))) cm-delimiters) t)))
+          (inhibit-read-only t))
+      (while (re-search-forward delims-regexp nil t)
+        (dolist (n '(1 2 3))
+          (when (match-string n)
+            (remove-text-properties (match-beginning n) (match-end n) '(read-only nil rear-nonsticky nil))))))))
+
+(defun cm-insert-markup (type &optional text)
+  "Insert CriticMarkup of TYPE.
+Also insert TEXT if non-nil.  For deletions, TEXT is the deleted
+text; for substitutions, the text to be substituted; for
+comments, the text to be highlighted.
+
+If `cm-author' is set, a comment is added with its value,
+preceded with `@'.
+
+If TYPE is `cm-highlight', a comment is added, which optionally
+starts with `cm-author'."
+  (let* ((delims (cdr (assq type cm-delimiters)))
+         (bdelim (cl-first delims))
+         (middle (if (cl-third delims) (cl-second delims))) ; "~>" for cm-substitution, otherwise nil
+         (edelim (car (last delims))))
+    (insert (or bdelim "")
+            (or text (if (and (eq type 'cm-comment)
+                              cm-author)
+                         (concat "@" cm-author " ")
+                       ""))
+            (or middle "")
+            (or edelim "")))
+  (if (and (not (eq type 'cm-comment))
+           (or cm-author (eq type 'cm-highlight)))
+      (insert "{>>"
+              (if cm-author (concat "@" cm-author))
+              (if (and (eq type 'cm-highlight)
+                       cm-author)
+                  " "
+                "")
+              "<<}")))
+
+;;; User functions
+
 (defvar cm-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c *") 'cm-prefix-map)
@@ -268,160 +372,6 @@ This keymap contains only one binding: `C-c *', which is bound to
         (set-buffer-modified-p nil)))  ; Removing text properties marks the buffer as modified, so we may need to adjust.
     (font-lock-ensure)
     (remove-overlays))))
-
-;;; Font lock
-
-(defun cm-font-lock-for-markup (type)
-  "Create a font lock entry for markup TYPE."
-  (let ((markup (cdr type))
-        (face (intern (concat (symbol-name (car type)) "-face")))
-        font-lock)
-    (add-to-list 'font-lock (mapconcat #'(lambda (elt)  ; First we create the regexp to match.
-                                           (regexp-opt (list elt) t))
-                                       markup
-                                       "\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?"))
-    (add-to-list 'font-lock `(0 ,face prepend) t)  ; The highlighter for the entire change.
-    (dotimes (n (length markup))
-      (when cm-read-only-annotations
-	(add-to-list 'font-lock `(,(1+ n) '(face ,face read-only t)) t)  ; Make the tags read-only.
-	(add-to-list 'font-lock `("." (progn  ; And make the read-only property of the final character rear-nonsticky
-					(goto-char (1- (match-end ,(1+ n))))
-					(1+ (point)))
-				  nil
-				  (0 '(face ,face rear-nonsticky (read-only))))
-                     t)))
-    font-lock))
-
-;; `cm-font-lock-for-markup' produces a font-lock entry that can be given
-;; to `font-lock-add-keywords'. To illustrate, the entry it produces for
-;; additions is the following:
-;; ("\\({\\+\\+\\)\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?\\(\\+\\+}\\)"
-;;  (0 cm-addition-face prepend)
-;;  (1 '(face cm-addition-face read-only t))
-;;  ("." (progn (goto-char (1- (match-end 1)))
-;;              (1+ (point)))
-;;   nil
-;;   (0 '(face cm-addition-face rear-nonsticky (read-only))))
-;;  (2 '(face cm-addition-face read-only t))
-;;  ("." (progn (goto-char (1- (match-end 2)))
-;;              (1+ (point)))
-;;   nil
-;;   (0 '(face cm-addition-face rear-nonsticky (read-only)))))
-;;
-;; This does some nice magic: it highlights addition markups with
-;; cm-addition-face, it makes the tags themselves, `{++' and `++}', read-only, and
-;; it gives the last character of the tags the text property (rear-nonsticky
-;; (read-only)), so that it's possible to add characters after the tag.
-
-(defun cm-font-lock-keywords ()
-  "Return a list of font lock keywords."
-  (mapcar #'cm-font-lock-for-markup cm-delimiters))
-
-;;; Follow Changes
-
-(defvar cm-follow-changes nil
-  "Flag indicating whether follow changes mode is active.")
-(make-variable-buffer-local 'cm-follow-changes)
-
-(defvar cm-current-deletion nil
-  "The deleted text in follow changes mode.
-The value is actually a list consisting of the text and a flag
-indicating whether the deletion was done with the backspace
-key.")
-
-(defun cm-follow-changes (&optional arg)
-  "Activate follow changes mode.
-If ARG is positive, activate follow changes mode, if ARG is 0 or
-negative, deactivate it.  If ARG is `toggle', toggle follow
-changes mode."
-  (interactive (list (or current-prefix-arg 'toggle)))
-  (let ((enable (if (eq arg 'toggle)
-                    (not cm-follow-changes)
-                  (> (prefix-numeric-value arg) 0))))
-    (if enable
-        (progn
-          (add-to-list 'before-change-functions 'cm-before-change t)
-          (add-to-list 'after-change-functions 'cm-after-change)
-          (setq cm-follow-changes t)
-          (message "Follow changes mode activated."))
-      (setq before-change-functions (delq 'cm-before-change before-change-functions))
-      (setq after-change-functions (delq 'cm-after-change after-change-functions))
-      (setq cm-follow-changes nil)
-      (message "Follow changes mode deactivated."))))
-
-(defun cm-before-change (beg end)
-  "Function to execute before a buffer change.
-BEG and END are the beginning and the end of the region to be
-changed."
-  (unless (or undo-in-progress
-              (and (= beg (point-min)) (= end (point-max))))  ; This happens on buffer switches.
-    (if (= beg end)  ; Addition.
-        (cm-make-addition (cm-markup-at-point))
-      ;; When the deletion was done with backspace, point is at end. We record
-      ;; this in `cm-current-deletion' so we can position point correctly.
-      (setq cm-current-deletion (list (buffer-substring beg end) (= (point) end))))))
-
-(defun cm-after-change (beg end length)
-  "Function to execute after a buffer change.
-This function marks deletions.  See cm-before-change for details.
-BEG and END mark the region to be changed, LENGTH is the length
-of the affected text."
-  (unless (or undo-in-progress
-              (not cm-current-deletion))
-    (apply #'cm-make-deletion cm-current-deletion)
-    (setq cm-current-deletion nil)))
-
-(defmacro cm-without-following-changes (&rest body)
-  "Execute BODY without following changes."
-  (declare (indent defun))
-  `(let ((inhibit-modification-hooks t))
-     ,@body))
-
-(defun cm-make-markups-writable ()
-  "Make all CM markup delimiters in the current buffer writable."
-  (save-excursion
-    (goto-char (point-min))
-    (let ((delims-regexp (concat (regexp-opt (mapcar #'cl-second cm-delimiters) t)
-                                 "\\([[:ascii:]]\\|[[:nonascii:]]\\)*?"
-                                 "\\(?:\\(~>\\)\\([[:ascii:]]\\|[[:nonascii:]]\\)*?\\)?"
-                                 (regexp-opt (mapcar (lambda (e) (car (last e))) cm-delimiters) t)))
-          (inhibit-read-only t))
-      (while (re-search-forward delims-regexp nil t)
-        (dolist (n '(1 2 3))
-          (when (match-string n)
-            (remove-text-properties (match-beginning n) (match-end n) '(read-only nil rear-nonsticky nil))))))))
-
-(defun cm-insert-markup (type &optional text)
-  "Insert CriticMarkup of TYPE.
-Also insert TEXT if non-nil.  For deletions, TEXT is the deleted
-text; for substitutions, the text to be substituted; for
-comments, the text to be highlighted.
-
-If `cm-author' is set, a comment is added with its value,
-preceded with `@'.
-
-If TYPE is `cm-highlight', a comment is added, which optionally
-starts with `cm-author'."
-  (let* ((delims (cdr (assq type cm-delimiters)))
-         (bdelim (cl-first delims))
-         (middle (if (cl-third delims) (cl-second delims))) ; "~>" for cm-substitution, otherwise nil
-         (edelim (car (last delims))))
-    (insert (or bdelim "")
-            (or text (if (and (eq type 'cm-comment)
-                              cm-author)
-                         (concat "@" cm-author " ")
-                       ""))
-            (or middle "")
-            (or edelim "")))
-  (if (and (not (eq type 'cm-comment))
-           (or cm-author (eq type 'cm-highlight)))
-      (insert "{>>"
-              (if cm-author (concat "@" cm-author))
-              (if (and (eq type 'cm-highlight)
-                       cm-author)
-                  " "
-                "")
-              "<<}")))
 
 ;; Making an addition is fairly simple: we just need to add markup if point
 ;; isn't already at an addition markup, and then position point
@@ -801,6 +751,8 @@ return nil."
                 (list (car change) (concat (cl-second change) (cl-second comment)) (cl-third change) (cl-fourth comment))
               change)))))))
 
+;;; Accept/reject changes
+
 (defun cm-accept/reject-change-at-point (&optional interactive)
   "Accept or reject change at point interactively.
 If the change is accepted or rejected, return point.  If the
@@ -827,8 +779,8 @@ interactively or not."
                                                 (if interactive "" "/(q)uit"))
                                         '(?d ?s ?q) t)))))
         (delete-overlay cm-current-markup-overlay)
-        (when (and (not interactive) (eq action ?q))  ; If the user aborted,
-          (throw 'quit nil))                          ; get out.
+        (when (and (not interactive) (eq action ?q)) ; If the user aborted,
+          (throw 'quit nil))                         ; get out.
         (cond
          ((memq action '(?a ?r ?d))
           (let ((inhibit-read-only t))
@@ -907,6 +859,60 @@ substitutions, `d' for comments and highlights."
   "Set the author string to STR."
   (interactive "sSet author to: ")
   (setq cm-author (if (string= str "") nil str)))
+
+;;; Follow Changes
+
+(defvar cm-follow-changes nil
+  "Flag indicating whether follow changes mode is active.")
+(make-variable-buffer-local 'cm-follow-changes)
+
+(defvar cm-current-deletion nil
+  "The deleted text in follow changes mode.
+The value is actually a list consisting of the text and a flag
+indicating whether the deletion was done with the backspace
+key.")
+
+(defun cm-follow-changes (&optional arg)
+  "Activate follow changes mode.
+If ARG is positive, activate follow changes mode, if ARG is 0 or
+negative, deactivate it.  If ARG is `toggle', toggle follow
+changes mode."
+  (interactive (list (or current-prefix-arg 'toggle)))
+  (let ((enable (if (eq arg 'toggle)
+                    (not cm-follow-changes)
+                  (> (prefix-numeric-value arg) 0))))
+    (if enable
+        (progn
+          (add-to-list 'before-change-functions 'cm-before-change t)
+          (add-to-list 'after-change-functions 'cm-after-change)
+          (setq cm-follow-changes t)
+          (message "Follow changes mode activated."))
+      (setq before-change-functions (delq 'cm-before-change before-change-functions))
+      (setq after-change-functions (delq 'cm-after-change after-change-functions))
+      (setq cm-follow-changes nil)
+      (message "Follow changes mode deactivated."))))
+
+(defun cm-before-change (beg end)
+  "Function to execute before a buffer change.
+BEG and END are the beginning and the end of the region to be
+changed."
+  (unless (or undo-in-progress
+              (and (= beg (point-min)) (= end (point-max))))  ; This happens on buffer switches.
+    (if (= beg end)  ; Addition.
+        (cm-make-addition (cm-markup-at-point))
+      ;; When the deletion was done with backspace, point is at end. We record
+      ;; this in `cm-current-deletion' so we can position point correctly.
+      (setq cm-current-deletion (list (buffer-substring beg end) (= (point) end))))))
+
+(defun cm-after-change (beg end length)
+  "Function to execute after a buffer change.
+This function marks deletions.  See cm-before-change for details.
+BEG and END mark the region to be changed, LENGTH is the length
+of the affected text."
+  (unless (or undo-in-progress
+              (not cm-current-deletion))
+    (apply #'cm-make-deletion cm-current-deletion)
+    (setq cm-current-deletion nil)))
 
 (provide 'cm-mode)
 
