@@ -93,6 +93,8 @@
 
 (require 'thingatpt)
 (require 'cl-lib)
+(require 'subr-x)
+(require 'track-changes)
 
 (defvar cm-addition-regexp "\\(?:{\\+\\+\\(\\(?:[[:ascii:]]\\|[[:nonascii:]]\\)*?\\)\\+\\+}\\)"
   "CriticMarkup addition regexp.")
@@ -869,28 +871,143 @@ substitutions, `d' for comments and highlights."
 
 ;;; Follow Changes
 
+(defvar cm--use-track-changes t)
+
 (defvar cm-current-deletion nil
   "The deleted text in follow changes mode.
 The value is actually a list consisting of the text and a flag
 indicating whether the deletion was done with the backspace
 key.")
 
+(defvar-local cm--change-tracker nil)
+
 (define-obsolete-variable-alias 'cm-follow-changes
   'cm-follow-changes-mode "2025")
 (define-obsolete-function-alias 'cm-follow-changes
   #'cm-follow-changes-mode "2025")
 (define-minor-mode cm-follow-changes-mode
-  "Activate follow changes mode.
-If ARG is positive, activate follow changes mode, if ARG is 0 or
-negative, deactivate it.  If ARG is `toggle', toggle follow
-changes mode."
-  :global nil
-  (if cm-follow-changes-mode
-        (progn
+  "Minor mode to automatically add CriticMarkup as you edit the buffer."
+  :init-value nil
+  (when cm--change-tracker
+    (track-changes-unregister
+     (prog1 cm--change-tracker (setq cm--change-tracker nil))))
+  (if cm-follow-changes
+      (progn
+        (unless cm-mode (cm-mode 1))
+        (if cm--use-track-changes
+            (setq cm--change-tracker
+                  (track-changes-register #'cm--track-changes :disjoint t))
           (add-hook 'before-change-functions #'cm-before-change nil t)
-          (add-hook 'after-change-functions #'cm-after-change nil t))
+          (add-hook 'after-change-functions #'cm-after-change nil t)))
     (remove-hook 'before-change-functions #'cm-before-change t)
     (remove-hook 'after-change-functions #'cm-after-change t)))
+
+(defun cm--inside-markup-p (pos)
+  (save-excursion
+    (goto-char pos)
+    (and (re-search-backward (eval-when-compile
+                               (regexp-opt (mapcar #'cadr cm-delimiters)))
+                             nil t)
+         (not (re-search-forward (eval-when-compile
+                                   (regexp-opt (mapcar #'caddr cm-delimiters)))
+                                 pos t)))))
+
+
+(defun cm--track-changes (id &optional distance)
+  (if (and distance (> distance 10))
+      (message "Oh, damn, merging with distance = %S" distance)
+    (track-changes-fetch
+     id (lambda (beg end before)
+          (cond
+           ;; If that was an undo, do nothing.
+           ;; `track-changes-undo-only' is new in Emacs-31.
+           ((bound-and-true-p track-changes-undo-only) nil)
+           ((not (stringp before)))
+           ((cm--inside-markup-p beg) nil) ; Edit within markup, nothing to do.
+           ((string-match-p (eval-when-compile
+                              (regexp-opt
+                               (append (mapcar #'cadr cm-delimiters)
+                                       (mapcar #'caddr cm-delimiters))))
+                            before)
+            nil) ; Deleting a markup.
+           ((save-excursion
+              (goto-char beg)
+              (re-search-forward (eval-when-compile
+                                   (regexp-opt
+                                    (append (mapcar #'cadr cm-delimiters)
+                                            (mapcar #'caddr cm-delimiters))))
+                                 end t))
+            nil) ; Adding markup.
+
+           ((zerop (length before)) ; Addition: wrap in add markup.
+            (save-excursion
+              (let* ((delims (alist-get 'cm-addition cm-delimiters))
+                     (atbeg
+                      (progn (goto-char end)
+                             (looking-at (regexp-quote (car delims)))))
+                     (atend
+                      (progn (goto-char beg)
+                             (looking-back
+                              (regexp-quote (cadr delims))
+                              (max (point-min)
+                                   (- (point) (length (cadr delims)))))))
+                     (inhibit-read-only t))
+                (cond
+                 ((and atbeg atend)
+                  (delete-region (- beg (length (cadr delims))) beg)
+                  (delete-region end (+ end (length (car delims)))))
+
+                 (atbeg
+                  (goto-char beg)
+                  (insert (delete-and-extract-region
+                           end (+ end (length (car delims))))))
+
+                 (atend
+                  (goto-char end)
+                  (insert (delete-and-extract-region
+                           (- beg (length (cadr delims))) beg)))
+
+                 (t ; New deletion.
+                  (goto-char end)
+                  (insert (cadr delims))
+                  (goto-char beg)
+                  (insert (car delims))))))
+            ;; Don't tell us about the change we just made.
+            (track-changes-fetch id #'ignore))
+
+           ((= beg end) ; Deletion: Wrap in del markup.
+            (save-excursion
+              (goto-char beg)
+              (let* ((delims (alist-get 'cm-deletion cm-delimiters))
+                     (atbeg
+                      (looking-at (regexp-quote (car delims))))
+                     (atend (looking-back
+                             (regexp-quote (cadr delims))
+                             (max (point-min)
+                                  (- (point) (length (cadr delims))))))
+                     (inhibit-read-only t))
+                (cond
+                 ((and atbeg atend)
+                  (replace-region-contents (- (point) (length (cadr delims)))
+                                           (+ (point) (length (car delims)))
+                                           before 0))
+                 (atbeg
+                  (forward-char (length (car delims)))
+                  (insert before))
+
+                 (atend
+                  (forward-char (- (length (cadr delims))))
+                  (insert before))
+
+                 (t ; New deletion.
+                  (insert (car delims)
+                          before
+                          (cadr delims))))))
+            ;; Don't tell us about the change we just made.
+            (track-changes-fetch id #'ignore))
+           (t
+            ;; wrap in substitution markup
+            ))))))
 
 (defun cm-before-change (beg end)
   "Function to execute before a buffer change.
