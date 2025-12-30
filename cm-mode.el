@@ -7,7 +7,7 @@
 ;; Created: 14 Feb 2013
 ;; Version: 1.9
 ;; Keywords: text, markdown
-;; Package-Requires: ((emacs "25.1") (cl-lib "0.5"))
+;; Package-Requires: ((emacs "27.1") (cl-lib "0.5"))
 
 ;; Redistribution and use in source and binary forms, with or without
 ;; modification, are permitted provided that the following conditions
