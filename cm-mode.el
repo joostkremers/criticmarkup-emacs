@@ -7,7 +7,7 @@
 ;; Created: 14 Feb 2013
 ;; Version: 1.10
 ;; Keywords: text, markdown
-;; Package-Requires: ((emacs "25.1") (cl-lib "0.5"))
+;; Package-Requires: ((emacs "27.1") (cl-lib "0.5"))
 
 ;; This file is part of GNU Emacs.
 
